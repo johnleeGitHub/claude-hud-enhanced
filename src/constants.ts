@@ -446,7 +446,7 @@ interface ModelHistory {
 const MODEL_HISTORY_FILE = '.model-history.json';
 
 function getModelHistoryPath(): string {
-  return path.join(os.homedir(), '.claude', 'plugins', 'claude-hud', MODEL_HISTORY_FILE);
+  return path.join(os.homedir(), '.claude', 'plugins', 'claude-hud-enhanced', MODEL_HISTORY_FILE);
 }
 
 export function getModelHistory(): ModelHistory {

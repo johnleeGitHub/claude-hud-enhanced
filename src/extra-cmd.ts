@@ -7,11 +7,11 @@ const MAX_BUFFER = 10 * 1024; // 10KB - plenty for a label
 const MAX_LABEL_LENGTH = 50;
 const TIMEOUT_MS = 3000;
 
-const isDebug = process.env.DEBUG?.includes('claude-hud') ?? false;
+const isDebug = (process.env.DEBUG?.includes('claude-hud-enhanced') || process.env.DEBUG?.includes('claude-hud')) ?? false;
 
 function debug(message: string): void {
   if (isDebug) {
-    console.error(`[claude-hud:extra-cmd] ${message}`);
+    console.error(`[claude-hud-enhanced:extra-cmd] ${message}`);
   }
 }
 

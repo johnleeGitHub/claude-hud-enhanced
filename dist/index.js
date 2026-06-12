@@ -110,7 +110,7 @@ export async function main(overrides = {}) {
         deps.render(ctx);
     }
     catch (error) {
-        deps.log("[claude-hud] Error:", error instanceof Error ? error.message : "Unknown error");
+        deps.log("[claude-hud-enhanced] Error:", error instanceof Error ? error.message : "Unknown error");
     }
 }
 export function formatSessionDuration(sessionStart, now = () => Date.now()) {

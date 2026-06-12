@@ -399,7 +399,7 @@ export function listThemes() {
 }
 const MODEL_HISTORY_FILE = '.model-history.json';
 function getModelHistoryPath() {
-    return path.join(os.homedir(), '.claude', 'plugins', 'claude-hud', MODEL_HISTORY_FILE);
+    return path.join(os.homedir(), '.claude', 'plugins', 'claude-hud-enhanced', MODEL_HISTORY_FILE);
 }
 export function getModelHistory() {
     try {

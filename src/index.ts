@@ -151,7 +151,7 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
     deps.render(ctx);
   } catch (error) {
     deps.log(
-      "[claude-hud] Error:",
+      "[claude-hud-enhanced] Error:",
       error instanceof Error ? error.message : "Unknown error",
     );
   }

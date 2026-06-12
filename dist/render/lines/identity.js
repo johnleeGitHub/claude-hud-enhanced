@@ -4,7 +4,7 @@ import { getAdaptiveBarWidth } from "../../utils/terminal.js";
 import { t } from "../../i18n/index.js";
 import { progressLabel } from "./label-align.js";
 import { getOutputSpeed } from "../../speed-tracker.js";
-const DEBUG = process.env.DEBUG?.includes("claude-hud") || process.env.DEBUG === "*";
+const DEBUG = process.env.DEBUG?.includes("claude-hud-enhanced") || process.env.DEBUG?.includes("claude-hud") || process.env.DEBUG === "*";
 export function renderIdentityLine(ctx, alignLabels = false) {
     const autoCompactWindow = ctx.config?.display?.autoCompactWindow ?? null;
     const rawPercent = getContextPercent(ctx.stdin, autoCompactWindow);
@@ -13,7 +13,7 @@ export function renderIdentityLine(ctx, alignLabels = false) {
     const percent = autocompactMode === "disabled" ? rawPercent : bufferedPercent;
     const colors = ctx.config?.colors;
     if (DEBUG && autocompactMode === "disabled") {
-        console.error(`[claude-hud:context] autocompactBuffer=disabled, showing raw ${rawPercent}% (buffered would be ${bufferedPercent}%)`);
+        console.error(`[claude-hud-enhanced:context] autocompactBuffer=disabled, showing raw ${rawPercent}% (buffered would be ${bufferedPercent}%)`);
     }
     const display = ctx.config?.display;
     const contextThresholds = {

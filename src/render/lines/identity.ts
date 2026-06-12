@@ -12,7 +12,7 @@ import { progressLabel } from "./label-align.js";
 import { getOutputSpeed } from "../../speed-tracker.js";
 
 const DEBUG =
-  process.env.DEBUG?.includes("claude-hud") || process.env.DEBUG === "*";
+  process.env.DEBUG?.includes("claude-hud-enhanced") || process.env.DEBUG?.includes("claude-hud") || process.env.DEBUG === "*";
 
 export function renderIdentityLine(
   ctx: RenderContext,
@@ -27,7 +27,7 @@ export function renderIdentityLine(
 
   if (DEBUG && autocompactMode === "disabled") {
     console.error(
-      `[claude-hud:context] autocompactBuffer=disabled, showing raw ${rawPercent}% (buffered would be ${bufferedPercent}%)`,
+      `[claude-hud-enhanced:context] autocompactBuffer=disabled, showing raw ${rawPercent}% (buffered would be ${bufferedPercent}%)`,
     );
   }
 

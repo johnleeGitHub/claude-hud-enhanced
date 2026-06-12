@@ -34,7 +34,7 @@ export const en: Messages = {
   "format.ago": "ago",
 
   // Init
-  "init.initializing": "[claude-hud] Initializing...",
+  "init.initializing": "[claude-hud-enhanced] Initializing...",
   "init.macosNote":
-    "[claude-hud] Note: On macOS, you may need to restart Claude Code for the HUD to appear.",
+    "[claude-hud-enhanced] Note: On macOS, you may need to restart Claude Code for the HUD to appear.",
 };

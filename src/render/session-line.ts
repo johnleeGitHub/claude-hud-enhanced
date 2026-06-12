@@ -12,7 +12,7 @@ import { t } from '../i18n/index.js';
 import type { TimeFormatMode, UsageValueMode } from '../config.js';
 import { formatResetTime } from './format-reset-time.js';
 
-const DEBUG = process.env.DEBUG?.includes('claude-hud') || process.env.DEBUG === '*';
+const DEBUG = process.env.DEBUG?.includes('claude-hud-enhanced') || process.env.DEBUG?.includes('claude-hud') || process.env.DEBUG === '*';
 
 /**
  * Renders the full session line (model + context bar + project + git + counts + usage + duration).
@@ -28,7 +28,7 @@ export function renderSessionLine(ctx: RenderContext): string {
   const percent = autocompactMode === 'disabled' ? rawPercent : bufferedPercent;
 
   if (DEBUG && autocompactMode === 'disabled') {
-    console.error(`[claude-hud:context] autocompactBuffer=disabled, showing raw ${rawPercent}% (buffered would be ${bufferedPercent}%)`);
+    console.error(`[claude-hud-enhanced:context] autocompactBuffer=disabled, showing raw ${rawPercent}% (buffered would be ${bufferedPercent}%)`);
   }
 
   const colors = ctx.config?.colors;
