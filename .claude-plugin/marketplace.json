@@ -1,0 +1,20 @@
+  {
+    "name": "claude-hud-enhanced",
+    "owner": {
+      "name": "johnleeGitHub",
+      "email": ""
+    },
+    "metadata": {
+      "description": "Enhanced HUD with 12 themes and more",
+      "version": "0.2.0"
+    },
+    "plugins": [
+      {
+        "name": "claude-hud-enhanced",
+        "source": "./",
+        "description": "Enhanced HUD with 12 themes, effort, cache, cost",
+        "category": "monitoring",
+        "tags": ["hud", "theme", "effort", "cache"]
+      }
+    ]
+  }
