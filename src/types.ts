@@ -117,6 +117,42 @@ export interface SessionTokenUsage {
   cacheReadTokens: number;
 }
 
+/** A single pricing entry for a model, matched by regex pattern against model.id */
+export interface ModelPricingEntry {
+  /** Regex pattern matched against model.id or model.display_name (case-insensitive) */
+  pattern: string;
+  /** Input price in USD per million tokens (cache miss / normal input) */
+  inputUsdPerMillion: number;
+  /** Output price in USD per million tokens */
+  outputUsdPerMillion: number;
+  /** Optional: per-million price for cache reads. Defaults to inputUsdPerMillion × 0.1 */
+  cacheReadUsdPerMillion?: number;
+  /** Optional: per-million price for cache creation. Defaults to inputUsdPerMillion × 1.25 */
+  cacheCreationUsdPerMillion?: number;
+  /** Optional display label, e.g. "DeepSeek", "OpenAI" */
+  provider?: string;
+}
+
+/** Resolved pricing for cost calculation (all fields resolved to concrete values) */
+export interface ModelPricing {
+  inputUsdPerMillion: number;
+  outputUsdPerMillion: number;
+  cacheReadUsdPerMillion: number;
+  cacheCreationUsdPerMillion: number;
+}
+
+/** Config section for third-party model pricing stored in HudConfig.modelPricing */
+export interface HudModelPricingConfig {
+  /** User-defined pricing entries (highest priority) */
+  entries: ModelPricingEntry[];
+  /** Enable web-based pricing updates */
+  enablePricingUpdate: boolean;
+  /** URL to fetch latest pricing.json from */
+  pricingUpdateUrl: string;
+  /** ISO timestamp of last successful update */
+  pricingUpdatedAt: string;
+}
+
 export interface TranscriptData {
   tools: ToolEntry[];
   agents: AgentEntry[];
