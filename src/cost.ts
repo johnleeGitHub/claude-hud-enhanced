@@ -131,6 +131,7 @@ export function estimateSessionCost(
   // 2. Try third-party pricing
   if (modelPricingConfig) {
     const modelId = stdin.model?.id ?? stdin.model?.display_name ?? '';
+    if (!modelId) return null;
     const thirdPartyPricing = getModelPricing(modelId, { modelPricing: modelPricingConfig });
     if (thirdPartyPricing) {
       return calculateCostFromPricing(sessionTokens, thirdPartyPricing);
