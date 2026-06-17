@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import type { HudModelPricingConfig, ModelPricing, ModelPricingEntry } from './types.js';
 
 /** A function that loads pricing entries from a remote source (e.g., HTTP fetch) */
-export type RemoteLoader = () => Promise<ModelPricingEntry[]>;
+export type RemoteLoader = () => ModelPricingEntry[];
 
 const CNY_TO_USD = 7.2;
 
@@ -37,7 +37,7 @@ export const BUILTIN_MODEL_PRICING: ModelPricingEntry[] = [
 function normalizePricingModelName(modelName: string): string {
   return modelName
     .toLowerCase()
-    .replace(/^claude\s+/i, '')
+    .replace(/^claude\s+/, '')
     .replace(/\([^)]*\)/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -86,13 +86,13 @@ export function matchFromList(modelId: string, entries: ModelPricingEntry[]): Mo
  *
  * Returns null if all layers miss.
  */
-export async function getModelPricing(
+export function getModelPricing(
   modelId: string,
-  config: { modelPricing: HudModelPricingConfig },
+  config: { modelPricing?: HudModelPricingConfig },
   loadRemote?: RemoteLoader,
-): Promise<ModelPricing | null> {
+): ModelPricing | null {
   // Layer 1: user config entries
-  if (config.modelPricing?.entries?.length > 0) {
+  if (config.modelPricing?.entries && config.modelPricing.entries.length > 0) {
     const result = matchFromList(modelId, config.modelPricing.entries);
     if (result !== null) {
       return result;
@@ -102,7 +102,7 @@ export async function getModelPricing(
   // Layer 2: remote pricing
   if (loadRemote) {
     try {
-      const remoteEntries = await loadRemote();
+      const remoteEntries = loadRemote();
       if (remoteEntries.length > 0) {
         const result = matchFromList(modelId, remoteEntries);
         if (result !== null) {
@@ -182,11 +182,13 @@ export function loadPricingFromDisk(pricingJsonPath: string): ModelPricingEntry[
     }
 
     // Handle CNY to USD conversion
-    if (entry.currency === 'cny') {
-      pricingEntry.inputUsdPerMillion = pricingEntry.inputUsdPerMillion / CNY_TO_USD;
-      pricingEntry.outputUsdPerMillion = pricingEntry.outputUsdPerMillion / CNY_TO_USD;
+    const entryCurrency = entry.currency;
+    const isCny = typeof entryCurrency === 'string' && entryCurrency.toLowerCase() === 'cny';
+    if (isCny) {
+      pricingEntry.inputUsdPerMillion = +(pricingEntry.inputUsdPerMillion / CNY_TO_USD).toFixed(4);
+      pricingEntry.outputUsdPerMillion = +(pricingEntry.outputUsdPerMillion / CNY_TO_USD).toFixed(4);
       if (pricingEntry.cacheReadUsdPerMillion !== undefined) {
-        pricingEntry.cacheReadUsdPerMillion = pricingEntry.cacheReadUsdPerMillion / CNY_TO_USD;
+        pricingEntry.cacheReadUsdPerMillion = +(pricingEntry.cacheReadUsdPerMillion / CNY_TO_USD).toFixed(4);
       }
       if (pricingEntry.cacheCreationUsdPerMillion !== undefined) {
         pricingEntry.cacheCreationUsdPerMillion = pricingEntry.cacheCreationUsdPerMillion / CNY_TO_USD;

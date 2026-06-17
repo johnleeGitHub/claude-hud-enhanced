@@ -150,12 +150,12 @@ test('getModelPricing uses user config entries first (priority)', async () => {
   assert.equal(result.outputUsdPerMillion, 199);
 });
 
-test('getModelPricing falls back to remote entries', async () => {
+test('getModelPricing falls back to remote entries', () => {
   const config = { modelPricing: { entries: [] } };
-  const loadRemote = async () => [
+  const loadRemote = () => [
     { pattern: 'custom-remote', inputUsdPerMillion: 5, outputUsdPerMillion: 15 },
   ];
-  const result = await getModelPricing('custom-remote', config, loadRemote);
+  const result = getModelPricing('custom-remote', config, loadRemote);
   assert.notEqual(result, null);
   assert.equal(result.inputUsdPerMillion, 5);
   assert.equal(result.outputUsdPerMillion, 15);
@@ -163,7 +163,7 @@ test('getModelPricing falls back to remote entries', async () => {
 
 test('getModelPricing falls back to builtin table', async () => {
   const config = { modelPricing: { entries: [] } };
-  const loadRemote = async () => [];
+  const loadRemote = () => [];
   const result = await getModelPricing('gpt-4o', config, loadRemote);
   assert.notEqual(result, null);
   assert.equal(result.inputUsdPerMillion, 2.5);
@@ -178,7 +178,7 @@ test('user config overrides builtin entries for same pattern', async () => {
       ],
     },
   };
-  const loadRemote = async () => [];
+  const loadRemote = () => [];
   const result = await getModelPricing('gpt-4o', config, loadRemote);
   assert.notEqual(result, null);
   // Config pricing (Layer 1) should win over builtin ($2.5/$10)
@@ -195,7 +195,7 @@ test('getModelPricing respects layer order (config > remote > builtin)', async (
       ],
     },
   };
-  const loadRemote = async () => [
+  const loadRemote = () => [
     { pattern: 'multi-layer-model', inputUsdPerMillion: 10, outputUsdPerMillion: 20 },
   ];
   const result = await getModelPricing('multi-layer-model', config, loadRemote);
@@ -206,7 +206,7 @@ test('getModelPricing respects layer order (config > remote > builtin)', async (
 
 test('getModelPricing skips layer 2 when it throws', async () => {
   const config = { modelPricing: { entries: [] } };
-  const loadRemote = async () => { throw new Error('Network error'); };
+  const loadRemote = () => { throw new Error('Network error'); };
   // Should fall through to builtin without throwing
   const result = await getModelPricing('gpt-4o', config, loadRemote);
   assert.notEqual(result, null);
