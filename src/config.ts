@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { getHudPluginDir } from './claude-config-dir.js';
 import type { Language } from './i18n/types.js';
+import type { HudModelPricingConfig, ModelPricingEntry } from './types.js';
 
 export type LineLayoutType = 'compact' | 'expanded';
 
@@ -156,6 +157,7 @@ export interface HudConfig {
     theme: string;
   };
   colors: HudColorOverrides;
+  modelPricing: HudModelPricingConfig;
 }
 
 export const DEFAULT_CONFIG: HudConfig = {
@@ -244,6 +246,12 @@ export const DEFAULT_CONFIG: HudConfig = {
     custom: 208,
     barFilled: '█',
     barEmpty: '░',
+  },
+  modelPricing: {
+    entries: [],
+    enablePricingUpdate: true,
+    pricingUpdateUrl: 'https://raw.githubusercontent.com/linuxdeepin/claude-hud-enhanced/main/pricing.json',
+    pricingUpdatedAt: '',
   },
 };
 
@@ -481,6 +489,22 @@ function validateFreshnessMs(value: unknown): number {
     return DEFAULT_CONFIG.display.externalUsageFreshnessMs;
   }
   return Math.max(0, Math.floor(value));
+}
+
+const MAX_PRICING_URL_LENGTH = 512;
+
+function validatePricingEntry(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const entry = value as Record<string, unknown>;
+  if (typeof entry.pattern !== 'string' || entry.pattern.length === 0) return false;
+  if (typeof entry.inputUsdPerMillion !== 'number' || entry.inputUsdPerMillion < 0) return false;
+  if (typeof entry.outputUsdPerMillion !== 'number' || entry.outputUsdPerMillion < 0) return false;
+  return true;
+}
+
+function validatePricingEntries(value: unknown): ModelPricingEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(validatePricingEntry) as ModelPricingEntry[];
 }
 
 export function mergeConfig(userConfig: Partial<HudConfig>): HudConfig {
@@ -726,7 +750,20 @@ export function mergeConfig(userConfig: Partial<HudConfig>): HudConfig {
       : DEFAULT_CONFIG.colors.barEmpty,
   };
 
-  return { language, lineLayout, showSeparators, pathLevels, maxWidth, forceMaxWidth, elementOrder, gitStatus, display, colors };
+  const modelPricing: HudModelPricingConfig = {
+    entries: validatePricingEntries(migrated.modelPricing?.entries),
+    enablePricingUpdate: typeof migrated.modelPricing?.enablePricingUpdate === 'boolean'
+      ? migrated.modelPricing.enablePricingUpdate
+      : DEFAULT_CONFIG.modelPricing.enablePricingUpdate,
+    pricingUpdateUrl: typeof migrated.modelPricing?.pricingUpdateUrl === 'string'
+      ? migrated.modelPricing.pricingUpdateUrl.slice(0, MAX_PRICING_URL_LENGTH)
+      : DEFAULT_CONFIG.modelPricing.pricingUpdateUrl,
+    pricingUpdatedAt: typeof migrated.modelPricing?.pricingUpdatedAt === 'string'
+      ? migrated.modelPricing.pricingUpdatedAt
+      : DEFAULT_CONFIG.modelPricing.pricingUpdatedAt,
+  };
+
+  return { language, lineLayout, showSeparators, pathLevels, maxWidth, forceMaxWidth, elementOrder, gitStatus, display, colors, modelPricing };
 }
 
 export async function loadConfig(): Promise<HudConfig> {
