@@ -1,7 +1,8 @@
-import type { SessionTokenUsage, StdinData } from './types.js';
+import type { HudModelPricingConfig, ModelPricing, SessionTokenUsage, StdinData } from './types.js';
 import { isBedrockModelId, isVertexModelId } from './stdin.js';
+import { getModelPricing } from './pricing-loader.js';
 
-type ModelPricing = {
+type AnthropicPricing = {
   inputUsdPerMillion: number;
   outputUsdPerMillion: number;
 };
@@ -26,7 +27,7 @@ const CACHE_READ_MULTIPLIER = 0.1;
 // Patterns are tried in order; the first match wins. Families with more specific
 // model lines (Haiku 4.x differs from Haiku 3.5) must come before any broader
 // fallback patterns to avoid silent under-pricing.
-const ANTHROPIC_MODEL_PRICING: Array<{ pattern: RegExp; pricing: ModelPricing }> = [
+const ANTHROPIC_MODEL_PRICING: Array<{ pattern: RegExp; pricing: AnthropicPricing }> = [
   { pattern: /\bopus 4(?: \d+)?\b/i, pricing: { inputUsdPerMillion: 15, outputUsdPerMillion: 75 } },
   { pattern: /\bsonnet 4(?: \d+)?\b/i, pricing: { inputUsdPerMillion: 3, outputUsdPerMillion: 15 } },
   { pattern: /\bsonnet 3 7\b/i, pricing: { inputUsdPerMillion: 3, outputUsdPerMillion: 15 } },
@@ -49,7 +50,7 @@ function normalizeModelName(modelName: string): string {
     .trim();
 }
 
-function matchAnthropicPricing(modelName: string): ModelPricing | null {
+function matchAnthropicPricing(modelName: string): AnthropicPricing | null {
   const normalized = normalizeModelName(modelName);
   for (const entry of ANTHROPIC_MODEL_PRICING) {
     if (entry.pattern.test(normalized)) {
@@ -63,7 +64,25 @@ function calculateUsd(tokens: number, usdPerMillion: number): number {
   return (tokens * usdPerMillion) / TOKENS_PER_MILLION;
 }
 
-function getAnthropicPricing(stdin: StdinData): ModelPricing | null {
+function calculateCostFromPricing(
+  tokens: SessionTokenUsage,
+  pricing: ModelPricing,
+): SessionCostEstimate {
+  const inputUsd = calculateUsd(tokens.inputTokens, pricing.inputUsdPerMillion);
+  const cacheCreationUsd = calculateUsd(tokens.cacheCreationTokens, pricing.cacheCreationUsdPerMillion);
+  const cacheReadUsd = calculateUsd(tokens.cacheReadTokens, pricing.cacheReadUsdPerMillion);
+  const outputUsd = calculateUsd(tokens.outputTokens, pricing.outputUsdPerMillion);
+
+  return {
+    totalUsd: inputUsd + cacheCreationUsd + cacheReadUsd + outputUsd,
+    inputUsd,
+    cacheCreationUsd,
+    cacheReadUsd,
+    outputUsd,
+  };
+}
+
+function getAnthropicPricing(stdin: StdinData): AnthropicPricing | null {
   const candidates = [
     stdin.model?.display_name?.trim(),
     stdin.model?.id?.trim(),
@@ -86,44 +105,39 @@ function getAnthropicPricing(stdin: StdinData): ModelPricing | null {
 export function estimateSessionCost(
   stdin: StdinData,
   sessionTokens: SessionTokenUsage | undefined,
+  modelPricingConfig?: HudModelPricingConfig,
 ): SessionCostEstimate | null {
-  if (!sessionTokens) {
-    return null;
-  }
-
-  if (isBedrockModelId(stdin.model?.id)) {
-    return null;
-  }
-
-  if (isVertexModelId(stdin.model?.id)) {
-    return null;
-  }
-
-  const pricing = getAnthropicPricing(stdin);
-  if (!pricing) {
-    return null;
-  }
+  if (!sessionTokens) return null;
+  if (isBedrockModelId(stdin.model?.id)) return null;
+  if (isVertexModelId(stdin.model?.id)) return null;
 
   const totalTokens = sessionTokens.inputTokens
     + sessionTokens.cacheCreationTokens
     + sessionTokens.cacheReadTokens
     + sessionTokens.outputTokens;
-  if (totalTokens === 0) {
-    return null;
+  if (totalTokens === 0) return null;
+
+  // 1. Try Anthropic pricing
+  const anthropicPricing = getAnthropicPricing(stdin);
+  if (anthropicPricing) {
+    return calculateCostFromPricing(sessionTokens, {
+      inputUsdPerMillion: anthropicPricing.inputUsdPerMillion,
+      outputUsdPerMillion: anthropicPricing.outputUsdPerMillion,
+      cacheReadUsdPerMillion: anthropicPricing.inputUsdPerMillion * CACHE_READ_MULTIPLIER,
+      cacheCreationUsdPerMillion: anthropicPricing.inputUsdPerMillion * CACHE_WRITE_MULTIPLIER,
+    });
   }
 
-  const inputUsd = calculateUsd(sessionTokens.inputTokens, pricing.inputUsdPerMillion);
-  const cacheCreationUsd = calculateUsd(sessionTokens.cacheCreationTokens, pricing.inputUsdPerMillion * CACHE_WRITE_MULTIPLIER);
-  const cacheReadUsd = calculateUsd(sessionTokens.cacheReadTokens, pricing.inputUsdPerMillion * CACHE_READ_MULTIPLIER);
-  const outputUsd = calculateUsd(sessionTokens.outputTokens, pricing.outputUsdPerMillion);
+  // 2. Try third-party pricing
+  if (modelPricingConfig) {
+    const modelId = stdin.model?.id ?? stdin.model?.display_name ?? '';
+    const thirdPartyPricing = getModelPricing(modelId, { modelPricing: modelPricingConfig });
+    if (thirdPartyPricing) {
+      return calculateCostFromPricing(sessionTokens, thirdPartyPricing);
+    }
+  }
 
-  return {
-    totalUsd: inputUsd + cacheCreationUsd + cacheReadUsd + outputUsd,
-    inputUsd,
-    cacheCreationUsd,
-    cacheReadUsd,
-    outputUsd,
-  };
+  return null;
 }
 
 function getNativeCostUsd(stdin: StdinData): number | null {
@@ -146,6 +160,7 @@ function getNativeCostUsd(stdin: StdinData): number | null {
 export function resolveSessionCost(
   stdin: StdinData,
   sessionTokens: SessionTokenUsage | undefined,
+  modelPricingConfig?: HudModelPricingConfig,
 ): SessionCostDisplay | null {
   const nativeCostUsd = getNativeCostUsd(stdin);
   if (nativeCostUsd !== null) {
@@ -155,7 +170,7 @@ export function resolveSessionCost(
     };
   }
 
-  const estimate = estimateSessionCost(stdin, sessionTokens);
+  const estimate = estimateSessionCost(stdin, sessionTokens, modelPricingConfig);
   if (!estimate) {
     return null;
   }

@@ -536,6 +536,80 @@ test('estimateSessionCost prices Claude Haiku 4.5 (and future 4.x minors)', () =
   assert.equal(formatUsd(haiku35.totalUsd), '$1.20');
 });
 
+test('estimateSessionCost falls back to third-party pricing for non-Anthropic models', () => {
+  const modelPricing = {
+    entries: [{ pattern: '^gpt-4o$', inputUsdPerMillion: 2.5, outputUsdPerMillion: 10 }],
+    enablePricingUpdate: false,
+    pricingUpdateUrl: '',
+    pricingUpdatedAt: '',
+  };
+  const estimate = estimateSessionCost(
+    { model: { id: 'gpt-4o' } },
+    {
+      inputTokens: 1_000_000,
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
+      outputTokens: 100_000,
+    },
+    modelPricing,
+  );
+
+  assert.ok(estimate, 'expected third-party estimate for gpt-4o');
+  // 1M input @ $2.5 + 100k output @ $10 = $2.50 + $1.00 = $3.50
+  assert.equal(formatUsd(estimate.totalUsd), '$3.50');
+});
+
+test('estimateSessionCost handles third-party models with explicit cache pricing', () => {
+  const modelPricing = {
+    entries: [
+      {
+        pattern: '^deepseek-v4-flash$',
+        inputUsdPerMillion: 0.14,
+        outputUsdPerMillion: 0.28,
+        cacheReadUsdPerMillion: 0.028,
+        provider: 'DeepSeek',
+      },
+    ],
+    enablePricingUpdate: false,
+    pricingUpdateUrl: '',
+    pricingUpdatedAt: '',
+  };
+  const estimate = estimateSessionCost(
+    { model: { id: 'deepseek-v4-flash' } },
+    {
+      inputTokens: 1_000_000,
+      cacheCreationTokens: 100_000,
+      cacheReadTokens: 200_000,
+      outputTokens: 100_000,
+    },
+    modelPricing,
+  );
+
+  assert.ok(estimate, 'expected estimate for deepseek-v4-flash');
+  assert.equal(formatUsd(estimate.totalUsd), '$0.191');
+});
+
+test('estimateSessionCost returns null for unknown third-party model', () => {
+  const modelPricing = {
+    entries: [],
+    enablePricingUpdate: false,
+    pricingUpdateUrl: '',
+    pricingUpdatedAt: '',
+  };
+  const estimate = estimateSessionCost(
+    { model: { id: 'completely-unknown-model-v99' } },
+    {
+      inputTokens: 100000,
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
+      outputTokens: 50000,
+    },
+    modelPricing,
+  );
+
+  assert.equal(estimate, null);
+});
+
 
 test('parseTranscript aggregates tools, agents, and todos', async () => {
   const fixturePath = fileURLToPath(new URL('./fixtures/transcript-basic.jsonl', import.meta.url));
