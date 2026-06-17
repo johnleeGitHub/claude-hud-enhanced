@@ -9,22 +9,22 @@ const CNY_TO_USD = 7.2;
 /** Built-in pricing for known third-party models (USD per million tokens) */
 export const BUILTIN_MODEL_PRICING: ModelPricingEntry[] = [
   // OpenAI
-  { pattern: 'gpt-4o(?:-\\d{4}-\\d{2}-\\d{2})?',   inputUsdPerMillion: 2.5,  outputUsdPerMillion: 10,   provider: 'OpenAI' },
-  { pattern: 'gpt-4o-mini',                           inputUsdPerMillion: 0.15, outputUsdPerMillion: 0.6,  provider: 'OpenAI' },
-  { pattern: 'o1(?:-\\d{4}-\\d{2}-\\d{2})?',        inputUsdPerMillion: 15,   outputUsdPerMillion: 60,   provider: 'OpenAI' },
-  { pattern: 'o3(?:-mini)?',                          inputUsdPerMillion: 10,   outputUsdPerMillion: 40,   provider: 'OpenAI' },
+  { pattern: '^gpt-4o(?:-\\d{4}-\\d{2}-\\d{2})?$',   inputUsdPerMillion: 2.5,  outputUsdPerMillion: 10,   provider: 'OpenAI' },
+  { pattern: '^gpt-4o-mini$',                           inputUsdPerMillion: 0.15, outputUsdPerMillion: 0.6,  provider: 'OpenAI' },
+  { pattern: '^o1(?:-\\d{4}-\\d{2}-\\d{2})?$',        inputUsdPerMillion: 15,   outputUsdPerMillion: 60,   provider: 'OpenAI' },
+  { pattern: '^o3(?:-mini)?$',                          inputUsdPerMillion: 10,   outputUsdPerMillion: 40,   provider: 'OpenAI' },
   // DeepSeek
-  { pattern: 'deepseek-v4-flash',                     inputUsdPerMillion: 0.14,  outputUsdPerMillion: 0.28,  cacheReadUsdPerMillion: 0.028, provider: 'DeepSeek' },
-  { pattern: 'deepseek-v4-pro',                      inputUsdPerMillion: 1.67,  outputUsdPerMillion: 3.33,  cacheReadUsdPerMillion: 0.14,  provider: 'DeepSeek' },
-  { pattern: 'deepseek-chat',                         inputUsdPerMillion: 0.5,  outputUsdPerMillion: 2,     provider: 'DeepSeek' },
-  { pattern: 'deepseek-reasoner',                     inputUsdPerMillion: 0.5,  outputUsdPerMillion: 2,     provider: 'DeepSeek' },
+  { pattern: '^deepseek-v4-flash$',                     inputUsdPerMillion: 0.14,  outputUsdPerMillion: 0.28,  cacheReadUsdPerMillion: 0.028, provider: 'DeepSeek' },
+  { pattern: '^deepseek-v4-pro$',                      inputUsdPerMillion: 1.67,  outputUsdPerMillion: 3.33,  cacheReadUsdPerMillion: 0.14,  provider: 'DeepSeek' },
+  { pattern: '^deepseek-chat$',                         inputUsdPerMillion: 0.5,  outputUsdPerMillion: 2,     provider: 'DeepSeek' },
+  { pattern: '^deepseek-reasoner$',                     inputUsdPerMillion: 0.5,  outputUsdPerMillion: 2,     provider: 'DeepSeek' },
   // MiniMax
-  { pattern: 'minimax/m2\\.7-highspeed',              inputUsdPerMillion: 0.30, outputUsdPerMillion: 0.30,  provider: 'MiniMax' },
+  { pattern: '^minimax/m2\\.7-highspeed$',              inputUsdPerMillion: 0.30, outputUsdPerMillion: 0.30,  provider: 'MiniMax' },
   // Moonshot / Kimi
-  { pattern: 'moonshot/kimi-k2\\.5',                  inputUsdPerMillion: 0.28, outputUsdPerMillion: 1.12,  cacheReadUsdPerMillion: 0.14, provider: 'Moonshot' },
+  { pattern: '^moonshot/kimi-k2\\.5$',                  inputUsdPerMillion: 0.28, outputUsdPerMillion: 1.12,  cacheReadUsdPerMillion: 0.14, provider: 'Moonshot' },
   // Zhipu / GLM-5
-  { pattern: 'glm-5-turbo',                           inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  provider: 'Zhipu' },
-  { pattern: 'zai-org/glm-5',                        inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  provider: 'Zhipu' },
+  { pattern: '^glm-5-turbo$',                           inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  provider: 'Zhipu' },
+  { pattern: '^zai-org/glm-5$',                        inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  provider: 'Zhipu' },
 ];
 
 /**

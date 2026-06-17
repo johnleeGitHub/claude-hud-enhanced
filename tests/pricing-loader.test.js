@@ -68,6 +68,23 @@ test('matchFromList strips Claude prefix', () => {
   assert.equal(result.inputUsdPerMillion, 2.5);
 });
 
+test('matchFromList with anchored patterns distinguishes gpt-4o from gpt-4o-mini', () => {
+  const entries = [
+    { pattern: '^gpt-4o(?:-\\d{4}-\\d{2}-\\d{2})?$', inputUsdPerMillion: 2.5, outputUsdPerMillion: 10 },
+    { pattern: '^gpt-4o-mini$', inputUsdPerMillion: 0.15, outputUsdPerMillion: 0.6 },
+  ];
+  // gpt-4o-mini should NOT match the gpt-4o pattern
+  const result = matchFromList('gpt-4o-mini', entries);
+  assert.ok(result);
+  assert.equal(result.inputUsdPerMillion, 0.15);
+  assert.equal(result.outputUsdPerMillion, 0.6);
+
+  // gpt-4o should still match its own pattern
+  const result2 = matchFromList('gpt-4o', entries);
+  assert.ok(result2);
+  assert.equal(result2.inputUsdPerMillion, 2.5);
+});
+
 test('matchFromList resolves default cache values', () => {
   const entries = [
     { pattern: 'gpt-4o', inputUsdPerMillion: 10, outputUsdPerMillion: 20 },
@@ -328,14 +345,13 @@ test('BUILTIN_MODEL_PRICING has expected entries', () => {
   assert.ok(Array.isArray(BUILTIN_MODEL_PRICING));
   assert.ok(BUILTIN_MODEL_PRICING.length > 0);
 
-  // Spot check specific entries
-  const gpt4o = BUILTIN_MODEL_PRICING.find(e => e.pattern.startsWith('gpt-4o('));
+  // Spot check specific entries by unique prices
+  const gpt4o = BUILTIN_MODEL_PRICING.find(e => e.inputUsdPerMillion === 2.5 && e.outputUsdPerMillion === 10);
   assert.ok(gpt4o, 'gpt-4o entry exists');
-  assert.equal(gpt4o.inputUsdPerMillion, 2.5);
-  assert.equal(gpt4o.outputUsdPerMillion, 10);
+  assert.equal(gpt4o.pattern, '^gpt-4o(?:-\\d{4}-\\d{2}-\\d{2})?$');
 
-  const deepseekFlash = BUILTIN_MODEL_PRICING.find(e => e.pattern === 'deepseek-v4-flash');
+  const deepseekFlash = BUILTIN_MODEL_PRICING.find(e => e.inputUsdPerMillion === 0.14 && e.outputUsdPerMillion === 0.28);
   assert.ok(deepseekFlash, 'deepseek-v4-flash entry exists');
-  assert.equal(deepseekFlash.inputUsdPerMillion, 0.14);
+  assert.equal(deepseekFlash.pattern, '^deepseek-v4-flash$');
   assert.equal(deepseekFlash.cacheReadUsdPerMillion, 0.028);
 });
