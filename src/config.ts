@@ -497,8 +497,8 @@ function validatePricingEntry(value: unknown): boolean {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const entry = value as Record<string, unknown>;
   if (typeof entry.pattern !== 'string' || entry.pattern.length === 0) return false;
-  if (typeof entry.inputUsdPerMillion !== 'number' || entry.inputUsdPerMillion < 0) return false;
-  if (typeof entry.outputUsdPerMillion !== 'number' || entry.outputUsdPerMillion < 0) return false;
+  if (typeof entry.inputUsdPerMillion !== 'number' || !Number.isFinite(entry.inputUsdPerMillion) || entry.inputUsdPerMillion < 0) return false;
+  if (typeof entry.outputUsdPerMillion !== 'number' || !Number.isFinite(entry.outputUsdPerMillion) || entry.outputUsdPerMillion < 0) return false;
   return true;
 }
 
