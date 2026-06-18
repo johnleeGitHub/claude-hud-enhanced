@@ -38,8 +38,10 @@ function normalizePricingModelName(modelName: string): string {
   return modelName
     .toLowerCase()
     .replace(/^claude\s+/, '')
-    .replace(/\([^)]*\)/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/\([^)]*\)/g, '')
+    .replace(/[_\s.]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
     .trim();
 }
 
@@ -191,7 +193,7 @@ export function loadPricingFromDisk(pricingJsonPath: string): ModelPricingEntry[
         pricingEntry.cacheReadUsdPerMillion = +(pricingEntry.cacheReadUsdPerMillion / CNY_TO_USD).toFixed(4);
       }
       if (pricingEntry.cacheCreationUsdPerMillion !== undefined) {
-        pricingEntry.cacheCreationUsdPerMillion = pricingEntry.cacheCreationUsdPerMillion / CNY_TO_USD;
+        pricingEntry.cacheCreationUsdPerMillion = +(pricingEntry.cacheCreationUsdPerMillion / CNY_TO_USD).toFixed(4);
       }
     }
 
