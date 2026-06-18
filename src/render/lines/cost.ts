@@ -14,5 +14,6 @@ export function renderCostEstimate(ctx: RenderContext): string | null {
   }
 
   const labelKey = cost.source === 'native' ? 'label.cost' : 'label.estimatedCost';
-  return label(`${t(labelKey)} ${formatUsd(cost.totalUsd)}`, ctx.config?.colors);
+  const providerTag = cost.provider ? ` [${cost.provider}]` : '';
+  return label(`${t(labelKey)} ${formatUsd(cost.totalUsd)}${providerTag}`, ctx.config?.colors);
 }

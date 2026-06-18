@@ -74,6 +74,7 @@ export function matchFromList(modelId: string, entries: ModelPricingEntry[]): Mo
       outputUsdPerMillion: entry.outputUsdPerMillion,
       cacheReadUsdPerMillion: entry.cacheReadUsdPerMillion ?? entry.inputUsdPerMillion * 0.1,
       cacheCreationUsdPerMillion: entry.cacheCreationUsdPerMillion ?? entry.inputUsdPerMillion * 1.25,
+      provider: entry.provider,
     };
   }
 

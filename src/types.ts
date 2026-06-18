@@ -139,6 +139,8 @@ export interface ModelPricing {
   outputUsdPerMillion: number;
   cacheReadUsdPerMillion: number;
   cacheCreationUsdPerMillion: number;
+  /** Provider display label (e.g. "DeepSeek", "OpenAI") propagated from matched entry */
+  provider?: string;
 }
 
 /** Config section for third-party model pricing stored in HudConfig.modelPricing */

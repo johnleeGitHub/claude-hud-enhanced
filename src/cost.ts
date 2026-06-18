@@ -13,11 +13,15 @@ export interface SessionCostEstimate {
   cacheCreationUsd: number;
   cacheReadUsd: number;
   outputUsd: number;
+  /** Provider label for third-party estimates, e.g. "DeepSeek" */
+  provider?: string;
 }
 
 export interface SessionCostDisplay {
   totalUsd: number;
   source: 'native' | 'estimate';
+  /** Provider label for third-party estimates, e.g. "DeepSeek" */
+  provider?: string;
 }
 
 const TOKENS_PER_MILLION = 1_000_000;
@@ -79,6 +83,7 @@ function calculateCostFromPricing(
     cacheCreationUsd,
     cacheReadUsd,
     outputUsd,
+    provider: pricing.provider,
   };
 }
 
@@ -179,6 +184,7 @@ export function resolveSessionCost(
   return {
     totalUsd: estimate.totalUsd,
     source: 'estimate',
+    provider: estimate.provider,
   };
 }
 
