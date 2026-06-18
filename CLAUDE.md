@@ -70,7 +70,9 @@ src/
 ├── git.ts                # Git status (branch, dirty, ahead/behind)
 ├── types.ts              # TypeScript interfaces
 ├── memory.ts             # System RAM usage
-├── cost.ts               # Session cost tracking
+├── cost.ts               # Session cost tracking (Anthropic + third-party model pricing)
+├── pricing-loader.ts      # Three-layer model pricing resolver (builtin/remote/user)
+├── update-pricing.ts      # Web-based pricing update (fetch, validate, atomic write)
 ├── speed-tracker.ts      # Output token speed
 ├── effort.ts             # Effort level display
 ├── extra-cmd.ts          # Custom command execution
@@ -126,6 +128,9 @@ Key options:
 | `display.showTodos` | `false` | Show todo progress |
 | `display.showCost` | `false` | Show session cost |
 | `display.showPromptCache` | `false` | Show prompt cache countdown |
+| `modelPricing.entries` | `[]` | Custom pricing entries (override built-in third-party pricing) |
+| `modelPricing.enablePricingUpdate` | `true` | Enable `/claude-hud:update-pricing` command |
+| `modelPricing.pricingUpdateUrl` | GitHub URL | Remote URL for pricing updates |
 
 ## Output Format
 

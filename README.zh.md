@@ -171,7 +171,11 @@ Claude Code → stdin JSON → claude-hud → stdout → 在终端中显示
 | `display.showContextBar` | boolean | true | 显示可视化上下文进度条 `████░░░░░░` |
 | `display.contextValue` | `percent` \| `tokens` \| `remaining` \| `both` | `percent` | 上下文显示格式（`45%`、`45k/200k`、剩余 `55%` 或 `45% (45k/200k)`） |
 | `display.showConfigCounts` | boolean | false | 显示 CLAUDE.md、rules、MCPs、hooks 数量 |
-| `display.showCost` | boolean | false | 使用 Claude Code 原生提供的 `cost.total_cost_usd` 显示会话费用（可用时），并附带本地估算回退方案 |
+| `display.showCost` | boolean | false | 使用 Claude Code 原生提供的 `cost.total_cost_usd` 显示会话费用（可用时），附带 Anthropic 原生会话（基于转录估算）和第三方模型（可配置定价表）的回退方案 |
+| `modelPricing.entries` | ModelPricingEntry[] | `[]` | 自定义定价条目，优先级最高。每条含：`pattern`（正则）、`inputUsdPerMillion`、`outputUsdPerMillion`、可选 `cacheReadUsdPerMillion`、`cacheCreationUsdPerMillion`、`provider` |
+| `modelPricing.enablePricingUpdate` | boolean | true | 启用 `/claude-hud:update-pricing` 命令联网更新定价 |
+| `modelPricing.pricingUpdateUrl` | string | GitHub raw URL | 远程 `pricing.json` 的获取地址 |
+| `modelPricing.pricingUpdatedAt` | string | `""` | 自动维护的上次成功更新时间戳 |
 | `display.showOutputStyle` | boolean | false | 从配置文件显示当前 Claude Code `outputStyle`，格式为 `style: <名称>` |
 | `display.showDuration` | boolean | false | 显示会话时长 `⏱️ 5m` |
 | `display.showSpeed` | boolean | false | 显示输出 Token 速度 `out: 42.1 tok/s` |
@@ -216,6 +220,13 @@ Claude Code → stdin JSON → claude-hud → stdout → 在终端中显示
 `display.showMemoryUsage` 为完全 opt-in 选项，仅在 `expanded` 布局下渲染。它报告本地机器的近似系统 RAM 使用情况，而非 Claude Code 或特定进程内的精确内存压力。由于可回收的 OS 缓存缓冲区仍可能被计入已用内存，该数字可能高估实际压力。
 
 `display.showCost` 为完全 opt-in 选项。ClaudeHUD 优先使用 Claude Code 在 stdin 上提供的原生 `cost.total_cost_usd` 字段（可用时）。如果该字段缺失或对直连 Anthropic 会话无效，ClaudeHUD 会回退到现有的基于本地转录文件的估算方案，确保费用行在旧负载下仍能工作。原生字段在会话中首个 API 响应之前为空，因此费用显示可能在响应到达前保持隐藏。对于已知的路由提供商（如 Bedrock、Vertex AI），ClaudeHUD 也会隐藏费用显示，因为云提供商计费会话可能报告 `$0.00` 或省略该字段，即使会话并非真正免费。
+
+**第三方模型**: 使用非 Anthropic 模型（如 `gpt-4o`、`deepseek-v4-flash`、`kimi-k2.5`）时，ClaudeHUD 通过三层定价表从 token 用量估算费用：
+1. **用户配置** — `config.json` → `modelPricing.entries`（优先级最高）
+2. **远程 pricing.json** — 通过 `/claude-hud:update-pricing` 命令获取
+3. **内置默认定价** — 内置 12 个常用模型条目（OpenAI、DeepSeek、MiniMax、Moonshot、Zhipu）
+
+定价通过正则模式匹配模型 ID。用户条目始终拥有最高优先级。运行 `/claude-hud:update-pricing` 获取项目维护的最新定价列表。
 
 `display.showPromptCache` 为完全 opt-in 选项。启用后，ClaudeHUD 会读取本地 transcript 中最后一次 assistant 响应的时间戳，并显示距离 prompt cache 过期还剩多久。默认 TTL 为 5 分钟（`300` 秒）。如果你想按 1 小时的 Max 风格窗口显示，可将 `display.promptCacheTtlSeconds` 设为 `3600`。如果 transcript 里还没有 assistant 时间戳，这个元素会继续隐藏。
 

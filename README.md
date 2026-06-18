@@ -176,7 +176,11 @@ Chinese HUD labels are available as an explicit opt-in. English stays the defaul
 | `display.showContextBar` | boolean | true | Show visual context bar `████░░░░░░` |
 | `display.contextValue` | `percent` \| `tokens` \| `remaining` \| `both` | `percent` | Context display format (`45%`, `45k/200k`, `55%` remaining, or `45% (45k/200k)`) |
 | `display.showConfigCounts` | boolean | false | Show CLAUDE.md, rules, MCPs, hooks counts |
-| `display.showCost` | boolean | false | Show session cost using Claude Code's native `cost.total_cost_usd` when available, with a local estimate fallback for direct Anthropic sessions |
+| `display.showCost` | boolean | false | Show session cost using Claude Code's native `cost.total_cost_usd` when available, with fallbacks for direct Anthropic sessions (transcript-based estimate) and third-party models (configurable pricing table) |
+| `modelPricing.entries` | ModelPricingEntry[] | `[]` | Custom pricing entries that override built-in and remote pricing. Each entry: `pattern` (regex string), `inputUsdPerMillion`, `outputUsdPerMillion`, optional `cacheReadUsdPerMillion`, `cacheCreationUsdPerMillion`, `provider` |
+| `modelPricing.enablePricingUpdate` | boolean | true | Enable the `/claude-hud:update-pricing` command to fetch latest pricing from remote |
+| `modelPricing.pricingUpdateUrl` | string | GitHub raw URL | URL to fetch updated `pricing.json` from |
+| `modelPricing.pricingUpdatedAt` | string | `""` | Auto-maintained ISO timestamp of last successful pricing update |
 | `display.showOutputStyle` | boolean | false | Show the active Claude Code `outputStyle` from settings files as `style: <name>` |
 | `display.showDuration` | boolean | false | Show session duration `⏱️ 5m` |
 | `display.showSpeed` | boolean | false | Show output token speed `out: 42.1 tok/s` |
@@ -221,6 +225,13 @@ Supported color names: `dim`, `red`, `green`, `yellow`, `magenta`, `cyan`, `brig
 `display.showMemoryUsage` is fully opt-in and only renders in `expanded` layout. It reports approximate system RAM usage from the local machine, not precise memory pressure inside Claude Code or a specific process. The number may overstate actual pressure because reclaimable OS cache and buffers can still be counted as used memory.
 
 `display.showCost` is fully opt-in. ClaudeHUD prefers the native `cost.total_cost_usd` field that Claude Code provides on stdin when it is available. If that field is absent or invalid for a direct Anthropic session, ClaudeHUD falls back to the existing local transcript-based estimate so the cost line still works on older payloads. The native field is absent before the first API response in a session, so the cost display may stay hidden until then. ClaudeHUD also keeps the cost hidden for known routed providers such as Bedrock and Vertex AI, because cloud-provider billed sessions may report `$0.00` or omit the field even though the session was not literally free.
+
+**Third-party models**: When using non-Anthropic models (e.g. `gpt-4o`, `deepseek-v4-flash`, `kimi-k2.5`), ClaudeHUD estimates cost from token usage via a three-layer pricing table:
+1. **User config** — `config.json` → `modelPricing.entries` (highest priority)
+2. **Remote pricing.json** — fetched via `/claude-hud:update-pricing` command
+3. **Built-in defaults** — 12 entries shipped for OpenAI, DeepSeek, MiniMax, Moonshot, Zhipu
+
+Pricing is matched by regex pattern against the model ID. User entries always take priority. Run `/claude-hud:update-pricing` to fetch the latest pricing from the project's curated list.
 
 `display.showPromptCache` is fully opt-in. When enabled, ClaudeHUD looks at the timestamp of the last assistant response in the local transcript and shows a live countdown until the prompt cache expires. The default TTL is 5 minutes (`300` seconds). Set `display.promptCacheTtlSeconds` to `3600` if you want a 1-hour Max-style window. If the transcript does not have an assistant timestamp yet, the cache element stays hidden.
 
