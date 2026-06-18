@@ -316,6 +316,38 @@ test('loadPricingFromDisk handles CNY currency conversion', async () => {
   }
 });
 
+test('loadPricingFromDisk CNY conversion rounds to 4 decimals for non-round values', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'pricing-test-'));
+  try {
+    const filePath = path.join(dir, 'pricing-cny-rounding.json');
+    await writeFile(filePath, JSON.stringify({
+      entries: [
+        {
+          pattern: 'cny-round-model',
+          inputUsdPerMillion: 1.23,
+          outputUsdPerMillion: 5.55,
+          cacheReadUsdPerMillion: 0.33,
+          cacheCreationUsdPerMillion: 2.99,
+          currency: 'cny',
+        },
+      ],
+    }), 'utf8');
+
+    const result = loadPricingFromDisk(filePath);
+    assert.equal(result.length, 1);
+    // 1.23 / 7.2 = 0.1708333... → .toFixed(4) → 0.1708
+    assert.equal(result[0].inputUsdPerMillion, 0.1708);
+    // 5.55 / 7.2 = 0.7708333... → .toFixed(4) → 0.7708
+    assert.equal(result[0].outputUsdPerMillion, 0.7708);
+    // 0.33 / 7.2 = 0.0458333... → .toFixed(4) → 0.0458
+    assert.equal(result[0].cacheReadUsdPerMillion, 0.0458);
+    // 2.99 / 7.2 = 0.4152777... → .toFixed(4) → 0.4153
+    assert.equal(result[0].cacheCreationUsdPerMillion, 0.4153);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('loadPricingFromDisk skips invalid entries', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'pricing-test-'));
   try {
