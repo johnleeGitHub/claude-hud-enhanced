@@ -7,6 +7,13 @@ import type { HudModelPricingConfig, ModelPricingEntry } from './types.js';
 
 export type LineLayoutType = 'compact' | 'expanded';
 
+/** CNY→USD conversion rate used when currency: "cny" is specified in pricing entries */
+const CNY_TO_USD = 7.2;
+
+function roundCnyToUsd(cny: number): number {
+  return Number((cny / CNY_TO_USD).toFixed(4));
+}
+
 export type AutocompactBufferMode = 'enabled' | 'disabled';
 export type ContextValueMode = 'percent' | 'tokens' | 'remaining' | 'both' | 'percentTokens';
 export type UsageValueMode = 'percent' | 'remaining';
@@ -121,6 +128,7 @@ export interface HudConfig {
     promptCacheTtlSeconds: number;
     showSessionTokens: boolean;
     showOutputStyle: boolean;
+    showCnyCost: boolean;
     showSessionStartDate: boolean;
     showLastResponseAt: boolean;
     mergeGroups: HudElement[][];
@@ -207,6 +215,7 @@ export const DEFAULT_CONFIG: HudConfig = {
     promptCacheTtlSeconds: 300,
     showSessionTokens: false,
     showOutputStyle: false,
+    showCnyCost: false,
     showSessionStartDate: false,
     showLastResponseAt: false,
     mergeGroups: DEFAULT_MERGE_GROUPS.map(group => [...group]),
@@ -504,7 +513,33 @@ function validatePricingEntry(value: unknown): boolean {
 
 function validatePricingEntries(value: unknown): ModelPricingEntry[] {
   if (!Array.isArray(value)) return [];
-  return value.filter(validatePricingEntry) as ModelPricingEntry[];
+  return (value
+    .filter(validatePricingEntry) as ModelPricingEntry[])
+    .map(convertCnyEntry);
+}
+
+/**
+ * Convert a pricing entry from CNY to USD if it has currency: "cny".
+ * Entries without the currency field are returned as-is.
+ * After conversion the currency field is stripped.
+ */
+function convertCnyEntry(entry: ModelPricingEntry): ModelPricingEntry {
+  const raw = entry as unknown as Record<string, unknown>;
+  const currency = typeof raw.currency === 'string' ? raw.currency.toLowerCase() : 'usd';
+  if (currency !== 'cny') return entry;
+
+  return {
+    pattern: entry.pattern,
+    inputUsdPerMillion: roundCnyToUsd(entry.inputUsdPerMillion),
+    outputUsdPerMillion: roundCnyToUsd(entry.outputUsdPerMillion),
+    cacheReadUsdPerMillion: entry.cacheReadUsdPerMillion !== undefined
+      ? roundCnyToUsd(entry.cacheReadUsdPerMillion)
+      : undefined,
+    cacheCreationUsdPerMillion: entry.cacheCreationUsdPerMillion !== undefined
+      ? roundCnyToUsd(entry.cacheCreationUsdPerMillion)
+      : undefined,
+    provider: entry.provider,
+  };
 }
 
 export function mergeConfig(userConfig: Partial<HudConfig>): HudConfig {
@@ -646,6 +681,9 @@ export function mergeConfig(userConfig: Partial<HudConfig>): HudConfig {
     showOutputStyle: typeof migrated.display?.showOutputStyle === 'boolean'
       ? migrated.display.showOutputStyle
       : DEFAULT_CONFIG.display.showOutputStyle,
+    showCnyCost: typeof migrated.display?.showCnyCost === 'boolean'
+      ? migrated.display.showCnyCost
+      : DEFAULT_CONFIG.display.showCnyCost,
     showSessionStartDate: typeof migrated.display?.showSessionStartDate === 'boolean'
       ? migrated.display.showSessionStartDate
       : DEFAULT_CONFIG.display.showSessionStartDate,

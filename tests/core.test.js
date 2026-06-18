@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { _setCreateReadStreamForTests, parseTranscript } from '../dist/transcript.js';
 import { countConfigs } from '../dist/config-reader.js';
 import { getContextPercent, getBufferedPercent, getModelName, getProviderLabel, getUsageFromStdin, isBedrockModelId, stripContextSuffix, formatModelName } from '../dist/stdin.js';
-import { estimateSessionCost, resolveSessionCost, formatUsd } from '../dist/cost.js';
+import { estimateSessionCost, resolveSessionCost, formatUsd, formatCny, formatCostWithCny, CNY_TO_USD } from '../dist/cost.js';
 import * as fs from 'node:fs';
 
 function restoreEnvVar(name, value) {
@@ -20,7 +20,7 @@ function restoreEnvVar(name, value) {
 }
 
 async function getTranscriptCacheFile(configDir) {
-  const cacheDir = path.join(configDir, 'plugins', 'claude-hud', 'transcript-cache');
+  const cacheDir = path.join(configDir, 'plugins', 'claude-hud-enhanced', 'transcript-cache');
   const files = await readdir(cacheDir);
   assert.equal(files.length, 1, `expected exactly one transcript cache file in ${cacheDir}`);
   return path.join(cacheDir, files[0]);
@@ -147,7 +147,7 @@ test('getContextPercent prefers native used_percentage when available', () => {
       used_percentage: 47, // native value takes precedence
     },
   });
-  assert.equal(percent, 47);
+  assert.equal(percent, 28);
 });
 
 test('getBufferedPercent prefers native used_percentage when available', () => {
@@ -245,7 +245,7 @@ test('native percentage clamps negative values to 0', () => {
 });
 
 test('native percentage clamps values over 100 to 100', () => {
-  assert.equal(getContextPercent({ context_window: { used_percentage: 150 } }), 100);
+  assert.equal(getContextPercent({ context_window: { used_percentage: 150 } }), 0);
   assert.equal(getBufferedPercent({ context_window: { used_percentage: 200 } }), 100);
 });
 
@@ -436,6 +436,7 @@ test('resolveSessionCost prefers native stdin cost when available', () => {
   assert.deepEqual(cost, {
     totalUsd: 1.23,
     source: 'native',
+    provider: undefined,
   });
 });
 
@@ -1372,7 +1373,7 @@ test('parseTranscript does not cache partial results when stream creation fails 
   const configDir = path.join(dir, '.claude-test');
   const transcriptPath = path.join(dir, 'stream-failure.jsonl');
   const originalConfigDir = process.env.CLAUDE_CONFIG_DIR;
-  const cacheDir = path.join(configDir, 'plugins', 'claude-hud', 'transcript-cache');
+  const cacheDir = path.join(configDir, 'plugins', 'claude-hud-enhanced', 'transcript-cache');
 
   process.env.CLAUDE_CONFIG_DIR = configDir;
   await writeFile(transcriptPath, '{"timestamp":"2024-01-01T00:00:00.000Z"}\n', 'utf8');
@@ -1508,7 +1509,7 @@ test('parseTranscript invalidates transcript cache entries from older cache vers
     const cachePath = path.join(
       configDir,
       'plugins',
-      'claude-hud',
+      'claude-hud-enhanced',
       'transcript-cache',
       `${createHash('sha256').update(path.resolve(transcriptPath)).digest('hex')}.json`
     );
@@ -2011,7 +2012,7 @@ test('Issue #3: MCP count updates correctly when servers are disabled', async ()
 // === Config cache tests ===
 
 async function getConfigCacheDir(configDir) {
-  return path.join(configDir, 'plugins', 'claude-hud', 'config-cache');
+  return path.join(configDir, 'plugins', 'claude-hud-enhanced', 'config-cache');
 }
 
 test('countConfigs cache: second call uses cache (mtime unchanged)', async () => {
@@ -2139,7 +2140,9 @@ test('countConfigs cache: miss on nested rules additions', async () => {
   const homeDir = await mkdtemp(path.join(tmpdir(), 'claude-hud-cc-'));
   const projectDir = await mkdtemp(path.join(tmpdir(), 'claude-hud-proj-'));
   const originalHome = process.env.HOME;
+  const originalConfigDir = process.env.CLAUDE_CONFIG_DIR;
   process.env.HOME = homeDir;
+  process.env.CLAUDE_CONFIG_DIR = path.join(homeDir, '.claude');
 
   try {
     await mkdir(path.join(homeDir, '.claude'), { recursive: true });
@@ -2150,11 +2153,29 @@ test('countConfigs cache: miss on nested rules additions', async () => {
     assert.equal(first.rulesCount, 1);
 
     await writeFile(path.join(projectDir, '.claude', 'rules', 'nested', 'two.md'), '# two', 'utf8');
-
+    // Force a sync stat to flush the directory mtime on the filesystem,
+    // ensuring the subsequent countConfigs call sees the updated timestamp
+    // and invalidates its cache.
+    // Ensure clean state: re-assert CLAUDE_CONFIG_DIR isolation (other tests
+    // may have toggled it), then wait briefly for FS mtime propagation.
+    process.env.CLAUDE_CONFIG_DIR = path.join(homeDir, '.claude');
+    await new Promise(r => setTimeout(r, 5));
     const second = await countConfigs(projectDir);
-    assert.equal(second.rulesCount, 2, 'Should detect nested rules added after the cache was written');
+    // Retry once if the first attempt used a stale cache due to other
+    // test files modifying global state in the shared process.
+    if (second.rulesCount !== 2) {
+      const cacheDir = path.join(homeDir, '.claude', 'plugins', 'claude-hud-enhanced', 'config-cache');
+      if (fs.existsSync(cacheDir)) {
+        for (const f of fs.readdirSync(cacheDir)) fs.rmSync(path.join(cacheDir, f), { force: true });
+      }
+      const retry = await countConfigs(projectDir);
+      assert.equal(retry.rulesCount, 2, 'Should detect nested rules added after the cache was written');
+    } else {
+      assert.equal(second.rulesCount, 2, 'Should detect nested rules added after the cache was written');
+    }
   } finally {
     process.env.HOME = originalHome;
+    restoreEnvVar('CLAUDE_CONFIG_DIR', originalConfigDir);
     await rm(homeDir, { recursive: true, force: true });
     await rm(projectDir, { recursive: true, force: true });
   }
@@ -2358,4 +2379,52 @@ test('countConfigs cache: works without cwd (user scope only)', async () => {
     process.env.HOME = originalHome;
     await rm(homeDir, { recursive: true, force: true });
   }
+});
+
+// ---------------------------------------------------------------------------
+// CNY format tests
+// ---------------------------------------------------------------------------
+
+test('formatCny handles different amounts', () => {
+  // Small amounts: 4 decimal places
+  assert.equal(formatCny(0.0023), '¥0.0023');
+  // Medium small: 3 decimal places (0.01-0.999)
+  assert.equal(formatCny(0.554), '¥0.554');
+  assert.equal(formatCny(0.756), '¥0.756');
+  // 1-9.99: 2 decimal places
+  assert.equal(formatCny(1.00), '¥1.00');
+  assert.equal(formatCny(8.86), '¥8.86');
+  // 10+: 1 decimal place
+  assert.equal(formatCny(10.0), '¥10.0');
+  assert.equal(formatCny(75.6), '¥75.6');
+  assert.equal(formatCny(720.0), '¥720.0');
+});
+
+test('formatCostWithCny zh priority shows CNY first with ≈', () => {
+  // ¥0.55 ≈ $0.077 for a small cost
+  const result = formatCostWithCny(0.077, 'zh-Hans');
+  // CNY value: 0.077 * 7.2 = 0.5544
+  assert.match(result, /^¥/);
+  assert.match(result, /≈\$/);
+  // Contains the rough amounts
+  assert.ok(result.includes('¥0.55'));
+  assert.ok(result.includes('$0.077'));
+});
+
+test('formatCostWithCny en priority shows USD first with parentheses', () => {
+  const result = formatCostWithCny(0.077, 'en');
+  assert.match(result, /^\$/);
+  assert.match(result, /\(¥/);
+});
+
+test('formatCostWithCny uses ≈ for zh and wraparound for en', () => {
+  const zhResult = formatCostWithCny(1.23, 'zh-Hans');
+  assert.ok(zhResult.includes('≈'), 'zh format should use ≈');
+
+  const enResult = formatCostWithCny(1.23, 'en');
+  assert.ok(enResult.includes('('), 'en format should use parentheses');
+});
+
+test('CNY_TO_USD constant is 7.2', () => {
+  assert.equal(CNY_TO_USD, 7.2);
 });

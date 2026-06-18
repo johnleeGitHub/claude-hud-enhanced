@@ -22,21 +22,25 @@ function restoreEnvVar(name, value) {
 }
 
 test('loadConfig returns valid config structure', async () => {
-  const config = await loadConfig();
+  const origDir = process.env.CLAUDE_CONFIG_DIR;
+  const tempHome = await mkdtemp(path.join(tmpdir(), 'hud-config-test-'));
+  process.env.CLAUDE_CONFIG_DIR = tempHome;
+  try {
+    const config = await loadConfig();
 
-  // pathLevels must be 1, 2, or 3
-  assert.ok([1, 2, 3].includes(config.pathLevels), 'pathLevels should be 1, 2, or 3');
+    // pathLevels must be 1, 2, or 3
+    assert.ok([1, 2, 3].includes(config.pathLevels), 'pathLevels should be 1, 2, or 3');
 
-  // lineLayout must be valid
-  const validLineLayouts = ['compact', 'expanded'];
-  assert.ok(validLineLayouts.includes(config.lineLayout), 'lineLayout should be valid');
+    // lineLayout must be valid
+    const validLineLayouts = ['compact', 'expanded'];
+    assert.ok(validLineLayouts.includes(config.lineLayout), 'lineLayout should be valid');
 
-  // showSeparators must be boolean
-  assert.equal(typeof config.showSeparators, 'boolean', 'showSeparators should be boolean');
-  assert.ok(config.maxWidth === null || (typeof config.maxWidth === 'number' && config.maxWidth > 0), 'maxWidth should be null or a positive number');
-  assert.ok(Array.isArray(config.elementOrder), 'elementOrder should be an array');
-  assert.ok(config.elementOrder.length > 0, 'elementOrder should not be empty');
-  assert.deepEqual(config.elementOrder, DEFAULT_ELEMENT_ORDER, 'elementOrder should default to the full expanded layout');
+    // showSeparators must be boolean
+    assert.equal(typeof config.showSeparators, 'boolean', 'showSeparators should be boolean');
+    assert.ok(config.maxWidth === null || (typeof config.maxWidth === 'number' && config.maxWidth > 0), 'maxWidth should be null or a positive number');
+    assert.ok(Array.isArray(config.elementOrder), 'elementOrder should be an array');
+    assert.ok(config.elementOrder.length > 0, 'elementOrder should not be empty');
+    assert.deepEqual(config.elementOrder, DEFAULT_ELEMENT_ORDER, 'elementOrder should default to the full expanded layout');
 
   // gitStatus object with expected properties
   assert.equal(typeof config.gitStatus, 'object');
@@ -68,6 +72,7 @@ test('loadConfig returns valid config structure', async () => {
   assert.equal(typeof config.display.promptCacheTtlSeconds, 'number');
   assert.equal(typeof config.display.showCost, 'boolean');
   assert.equal(typeof config.display.showOutputStyle, 'boolean');
+  assert.equal(typeof config.display.showCnyCost, 'boolean');
   assert.equal(typeof config.display.externalUsagePath, 'string');
   assert.equal(typeof config.display.externalUsageFreshnessMs, 'number');
   assert.ok(['full', 'compact', 'short'].includes(config.display.modelFormat), 'modelFormat should be valid');
@@ -76,6 +81,10 @@ test('loadConfig returns valid config structure', async () => {
   for (const key of ['context', 'usage', 'warning', 'usageWarning', 'critical', 'model', 'project', 'git', 'gitBranch', 'label', 'custom']) {
     const t = typeof config.colors[key];
     assert.ok(t === 'string' || t === 'number', `colors.${key} should be string or number, got ${t}`);
+  }
+  } finally {
+    process.env.CLAUDE_CONFIG_DIR = origDir;
+    await rm(tempHome, { recursive: true, force: true }).catch(() => {});
   }
 });
 
@@ -86,7 +95,7 @@ test('getConfigPath returns correct path', () => {
   try {
     const configPath = getConfigPath();
     const homeDir = os.homedir();
-    assert.equal(configPath, path.join(homeDir, '.claude', 'plugins', 'claude-hud', 'config.json'));
+    assert.equal(configPath, path.join(homeDir, '.claude', 'plugins', 'claude-hud-enhanced', 'config.json'));
   } finally {
     restoreEnvVar('CLAUDE_CONFIG_DIR', originalConfigDir);
   }
@@ -242,6 +251,22 @@ test('mergeConfig defaults showOutputStyle to false', () => {
   assert.equal(DEFAULT_CONFIG.display.showOutputStyle, false);
 });
 
+test('mergeConfig defaults showCnyCost to false', () => {
+  const config = mergeConfig({});
+  assert.equal(config.display.showCnyCost, false);
+  assert.equal(DEFAULT_CONFIG.display.showCnyCost, false);
+});
+
+test('mergeConfig preserves explicit showCnyCost=true', () => {
+  const config = mergeConfig({ display: { showCnyCost: true } });
+  assert.equal(config.display.showCnyCost, true);
+});
+
+test('mergeConfig preserves explicit showCnyCost=false', () => {
+  const config = mergeConfig({ display: { showCnyCost: false } });
+  assert.equal(config.display.showCnyCost, false);
+});
+
 test('mergeConfig preserves explicit showOutputStyle=true', () => {
   const config = mergeConfig({ display: { showOutputStyle: true } });
   assert.equal(config.display.showOutputStyle, true);
@@ -344,7 +369,7 @@ test('getConfigPath respects CLAUDE_CONFIG_DIR', async () => {
   try {
     process.env.CLAUDE_CONFIG_DIR = customConfigDir;
     const configPath = getConfigPath();
-    assert.equal(configPath, path.join(customConfigDir, 'plugins', 'claude-hud', 'config.json'));
+    assert.equal(configPath, path.join(customConfigDir, 'plugins', 'claude-hud-enhanced', 'config.json'));
   } finally {
     restoreEnvVar('CLAUDE_CONFIG_DIR', originalConfigDir);
     await rm(customConfigDir, { recursive: true, force: true });
@@ -357,7 +382,7 @@ test('loadConfig reads user config from CLAUDE_CONFIG_DIR', async () => {
 
   try {
     process.env.CLAUDE_CONFIG_DIR = customConfigDir;
-    const pluginDir = path.join(customConfigDir, 'plugins', 'claude-hud');
+    const pluginDir = path.join(customConfigDir, 'plugins', 'claude-hud-enhanced');
     await mkdir(pluginDir, { recursive: true });
     await writeFile(
       path.join(pluginDir, 'config.json'),

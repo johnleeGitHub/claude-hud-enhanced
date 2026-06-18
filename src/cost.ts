@@ -170,9 +170,12 @@ export function resolveSessionCost(
 ): SessionCostDisplay | null {
   const nativeCostUsd = getNativeCostUsd(stdin);
   if (nativeCostUsd !== null) {
+    const modelId = stdin.model?.id ?? stdin.model?.display_name ?? '';
+    const pricing = modelPricingConfig ? getModelPricing(modelId, { modelPricing: modelPricingConfig }) : null;
     return {
       totalUsd: nativeCostUsd,
       source: 'native',
+      provider: pricing?.provider,
     };
   }
 
@@ -196,4 +199,31 @@ export function formatUsd(amount: number): string {
     return `$${amount.toFixed(3)}`;
   }
   return `$${amount.toFixed(4)}`;
+}
+
+/** CNY→USD rate used when displaying cost in both currencies */
+export const CNY_TO_USD = 7.2;
+
+export function formatCny(amount: number): string {
+  if (amount >= 10) return `¥${amount.toFixed(1)}`;
+  if (amount >= 1) return `¥${amount.toFixed(2)}`;
+  if (amount >= 0.01) return `¥${amount.toFixed(3)}`;
+  return `¥${amount.toFixed(4)}`;
+}
+
+/**
+ * Format cost with both USD and CNY, prioritizing based on locale.
+ *
+ * - zh-first (language starts with 'zh'):  ¥0.55≈$0.077
+ * - usd-first (default):                   $0.077 (¥0.55)
+ */
+export function formatCostWithCny(usd: number, language: string): string {
+  const cny = usd * CNY_TO_USD;
+  const usdStr = formatUsd(usd);
+  const cnyStr = formatCny(cny);
+
+  if (language.startsWith('zh')) {
+    return `${cnyStr}≈${usdStr}`;
+  }
+  return `${usdStr} (${cnyStr})`;
 }

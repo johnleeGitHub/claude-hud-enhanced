@@ -13,18 +13,18 @@ export const BUILTIN_MODEL_PRICING: ModelPricingEntry[] = [
   { pattern: '^gpt-4o-mini$',                           inputUsdPerMillion: 0.15, outputUsdPerMillion: 0.6,  provider: 'OpenAI' },
   { pattern: '^o1(?:-\\d{4}-\\d{2}-\\d{2})?$',        inputUsdPerMillion: 15,   outputUsdPerMillion: 60,   provider: 'OpenAI' },
   { pattern: '^o3(?:-mini)?$',                          inputUsdPerMillion: 10,   outputUsdPerMillion: 40,   provider: 'OpenAI' },
-  // DeepSeek
-  { pattern: '^deepseek-v4-flash$',                     inputUsdPerMillion: 0.14,  outputUsdPerMillion: 0.28,  cacheReadUsdPerMillion: 0.028, provider: 'DeepSeek' },
-  { pattern: '^deepseek-v4-pro$',                      inputUsdPerMillion: 1.67,  outputUsdPerMillion: 3.33,  cacheReadUsdPerMillion: 0.14,  provider: 'DeepSeek' },
-  { pattern: '^deepseek-chat$',                         inputUsdPerMillion: 0.5,  outputUsdPerMillion: 2,     provider: 'DeepSeek' },
-  { pattern: '^deepseek-reasoner$',                     inputUsdPerMillion: 0.5,  outputUsdPerMillion: 2,     provider: 'DeepSeek' },
-  // MiniMax
-  { pattern: '^minimax/m2\\.7-highspeed$',              inputUsdPerMillion: 0.30, outputUsdPerMillion: 0.30,  provider: 'MiniMax' },
-  // Moonshot / Kimi
-  { pattern: '^moonshot/kimi-k2\\.5$',                  inputUsdPerMillion: 0.28, outputUsdPerMillion: 1.12,  cacheReadUsdPerMillion: 0.14, provider: 'Moonshot' },
-  // Zhipu / GLM-5
-  { pattern: '^glm-5-turbo$',                           inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  provider: 'Zhipu' },
-  { pattern: '^zai-org/glm-5$',                        inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  provider: 'Zhipu' },
+  // DeepSeek (all models support caching: cache hit = 20% of input price)
+  { pattern: '^deepseek-v4-flash$',                     inputUsdPerMillion: 0.14,  outputUsdPerMillion: 0.28,  cacheReadUsdPerMillion: 0.028, cacheCreationUsdPerMillion: 0.028, provider: 'DeepSeek' },
+  { pattern: '^deepseek-v4-pro$',                      inputUsdPerMillion: 1.67,  outputUsdPerMillion: 3.33,  cacheReadUsdPerMillion: 0.14,  cacheCreationUsdPerMillion: 0.14, provider: 'DeepSeek' },
+  { pattern: '^deepseek-chat$',                         inputUsdPerMillion: 0.50,  outputUsdPerMillion: 2.00,  cacheReadUsdPerMillion: 0.10,  cacheCreationUsdPerMillion: 0.10, provider: 'DeepSeek' },
+  { pattern: '^deepseek-reasoner$',                     inputUsdPerMillion: 0.50,  outputUsdPerMillion: 2.00,  cacheReadUsdPerMillion: 0.10,  cacheCreationUsdPerMillion: 0.10, provider: 'DeepSeek' },
+  // MiniMax (supports caching ~50% discount)
+  { pattern: '^minimax/m2\\.7-highspeed$',              inputUsdPerMillion: 0.30, outputUsdPerMillion: 0.30,  cacheReadUsdPerMillion: 0.15,  cacheCreationUsdPerMillion: 0.15, provider: 'MiniMax' },
+  // Moonshot / Kimi (cache hit = 50% of input)
+  { pattern: '^moonshot/kimi-k2\\.5$',                  inputUsdPerMillion: 0.28, outputUsdPerMillion: 1.12,  cacheReadUsdPerMillion: 0.14,  cacheCreationUsdPerMillion: 0.14,  provider: 'Moonshot' },
+  // Zhipu / GLM-5 (cache hit ~25% of input per official GLM-5 pricing)
+  { pattern: '^glm-5-turbo$',                           inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  cacheReadUsdPerMillion: 0.09,  cacheCreationUsdPerMillion: 0.09, provider: 'Zhipu' },
+  { pattern: '^zai-org/glm-5$',                        inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  cacheReadUsdPerMillion: 0.09,  cacheCreationUsdPerMillion: 0.09, provider: 'Zhipu' },
 ];
 
 /**
@@ -39,6 +39,7 @@ function normalizePricingModelName(modelName: string): string {
     .toLowerCase()
     .replace(/^claude\s+/, '')
     .replace(/\([^)]*\)/g, '')
+    .replace(/\[[^\]]*\]/g, '')   // strip context-window suffixes like [1m]
     .replace(/[_\s.]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')

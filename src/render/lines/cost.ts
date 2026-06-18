@@ -1,5 +1,5 @@
 import type { RenderContext } from '../../types.js';
-import { resolveSessionCost, formatUsd } from '../../cost.js';
+import { resolveSessionCost, formatUsd, formatCostWithCny } from '../../cost.js';
 import { t } from '../../i18n/index.js';
 import { label } from '../colors.js';
 
@@ -15,5 +15,12 @@ export function renderCostEstimate(ctx: RenderContext): string | null {
 
   const labelKey = cost.source === 'native' ? 'label.cost' : 'label.estimatedCost';
   const providerTag = cost.provider ? ` [${cost.provider}]` : '';
-  return label(`${t(labelKey)} ${formatUsd(cost.totalUsd)}${providerTag}`, ctx.config?.colors);
+
+  // Show CNY equivalent when explicitly enabled or when language is zh/zh-Hans
+  const showCny = ctx.config.display.showCnyCost || (ctx.config.language?.startsWith('zh') ?? false);
+  const formatted = showCny
+    ? formatCostWithCny(cost.totalUsd, ctx.config.language)
+    : formatUsd(cost.totalUsd);
+
+  return label(`${t(labelKey)} ${formatted}${providerTag}`, ctx.config?.colors);
 }

@@ -31,6 +31,7 @@
       "inputUsdPerMillion": 0.14,
       "outputUsdPerMillion": 0.28,
       "cacheReadUsdPerMillion": 0.028,
+      "cacheCreationUsdPerMillion": 0.028,
       "provider": "DeepSeek"
     },
     {
@@ -38,24 +39,31 @@
       "inputUsdPerMillion": 1.67,
       "outputUsdPerMillion": 3.33,
       "cacheReadUsdPerMillion": 0.14,
+      "cacheCreationUsdPerMillion": 0.14,
       "provider": "DeepSeek"
     },
     {
       "pattern": "^deepseek-chat$",
       "inputUsdPerMillion": 0.5,
       "outputUsdPerMillion": 2,
+      "cacheReadUsdPerMillion": 0.1,
+      "cacheCreationUsdPerMillion": 0.1,
       "provider": "DeepSeek"
     },
     {
       "pattern": "^deepseek-reasoner$",
       "inputUsdPerMillion": 0.5,
       "outputUsdPerMillion": 2,
+      "cacheReadUsdPerMillion": 0.1,
+      "cacheCreationUsdPerMillion": 0.1,
       "provider": "DeepSeek"
     },
     {
       "pattern": "^minimax/m2\\.7-highspeed$",
       "inputUsdPerMillion": 0.3,
       "outputUsdPerMillion": 0.3,
+      "cacheReadUsdPerMillion": 0.15,
+      "cacheCreationUsdPerMillion": 0.15,
       "provider": "MiniMax"
     },
     {
@@ -63,18 +71,23 @@
       "inputUsdPerMillion": 0.28,
       "outputUsdPerMillion": 1.12,
       "cacheReadUsdPerMillion": 0.14,
+      "cacheCreationUsdPerMillion": 0.14,
       "provider": "Moonshot"
     },
     {
       "pattern": "^glm-5-turbo$",
       "inputUsdPerMillion": 0.35,
       "outputUsdPerMillion": 0.4,
+      "cacheReadUsdPerMillion": 0.09,
+      "cacheCreationUsdPerMillion": 0.09,
       "provider": "Zhipu"
     },
     {
       "pattern": "^zai-org/glm-5$",
       "inputUsdPerMillion": 0.35,
       "outputUsdPerMillion": 0.4,
+      "cacheReadUsdPerMillion": 0.09,
+      "cacheCreationUsdPerMillion": 0.09,
       "provider": "Zhipu"
     }
   ]
