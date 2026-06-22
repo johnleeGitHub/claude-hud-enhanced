@@ -1,6 +1,6 @@
 {
   "name": "claude-hud-enhanced",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Enhanced statusline HUD with OMC-style features: tier codes, multiline agents, background tasks, safe mode",
   "type": "module",
   "main": "dist/index.js",

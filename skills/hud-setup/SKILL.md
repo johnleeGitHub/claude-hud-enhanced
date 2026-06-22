@@ -1,6 +1,7 @@
 ---
+name: hud-setup
 description: Configure claude-hud-enhanced as your statusline
-allowed-tools: Bash, Read, Edit, AskUserQuestion
+tools: Bash, Read, Edit, AskUserQuestion
 ---
 
 **Note**: Placeholders like `{RUNTIME_PATH}`, `{SOURCE}`, and `{GENERATED_COMMAND}` should be substituted with actual detected values.

@@ -1,6 +1,7 @@
 ---
-description: Configure HUD display options (layout, language, presets, display elements) while preserving advanced manual overrides
-allowed-tools: Read, Write, AskUserQuestion
+name: hud-configure
+description: Configure HUD display options (layout, language, presets, display elements)
+tools: Read, Write, AskUserQuestion
 ---
 
 # Configure Claude HUD

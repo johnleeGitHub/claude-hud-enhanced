@@ -1,6 +1,7 @@
 ---
+name: hud-update-pricing
 description: Update third-party model pricing table from remote source
-allowed-tools: Bash, Read, Edit, Write
+tools: Bash, Read, Edit, Write
 ---
 
 # Update Pricing
