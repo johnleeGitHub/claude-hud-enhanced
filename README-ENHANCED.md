@@ -244,7 +244,7 @@ git clone https://github.com/johnleeGitHub/claude-hud-enhanced.git
 ## 🏷️ 版本
 
 - 原版: `0.1.0`
-- 增强版: `0.2.0`
+- 增强版: `0.3.0`
 
 ## 📜 License
 

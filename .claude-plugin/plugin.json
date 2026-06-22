@@ -1,7 +1,7 @@
 {
   "name": "claude-hud-enhanced",
   "description": "Enhanced HUD with 12 themes, effort, cache, cost",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": { "name": "johnleeGitHub", "url": "https://github.com/johnleeGitHub" },
   "homepage": "https://github.com/johnleeGitHub/claude-hud-enhanced",
   "repository": "https://github.com/johnleeGitHub/claude-hud-enhanced",
