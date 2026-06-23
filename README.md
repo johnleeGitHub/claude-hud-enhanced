@@ -1,307 +1,185 @@
-# Claude HUD
+# Claude HUD Enhanced
 
-A Claude Code plugin that shows what's happening — context usage, active tools, running agents, and todo progress. Always visible below your input.
+基于 [claude-hud](https://github.com/jarrodwatts/claude-hud) 的增强版本，由 [johnleeGitHub](https://github.com/johnleeGitHub) 维护，添加了大量新功能和改进。
 
-[![License](https://img.shields.io/github/license/jarrodwatts/claude-hud?v=2)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/jarrodwatts/claude-hud)](https://github.com/jarrodwatts/claude-hud/stargazers)
+## ✨ 增强功能总览
 
-![Claude HUD in action](claude-hud-preview-5-2.png)
+### 🎨 12 个颜色主题
+| 主题 | 描述 |
+|------|------|
+| `default` | 经典配色 |
+| `solarized-dark` | 温暖暗色 |
+| `dracula` | 紫色主题 |
+| `nord` | 北极蓝 |
+| `catppuccin-mocha` | 柔和咖啡 |
+| `monokai` | 编辑器经典 |
+| `gruvbox` | 复古配色 |
+| `neon` | 霓虹高亮 |
+| `synthwave` | 赛博朋克 |
+| `matrix` ⭐ | 黑客帝国绿 (默认) |
+| `sunset` | 日落渐变 |
+| `ocean` | 深海蓝 |
 
-> 🌐 English | [中文文档](README.zh.md)
+### 🔥 新增显示功能
 
-## Install
-
-Inside a Claude Code instance, run the following commands:
-
-**Step 1: Add the marketplace**
+#### 1. 推理力度 (Effort Level)
 ```
-/plugin marketplace add jarrodwatts/claude-hud
+[deepseek-v4-flash ◕ xhigh]
 ```
+显示当前模型的推理力度等级：`xhigh` / `high` / `medium` / `low`
 
-**Step 2: Install the plugin**
-
-<details>
-<summary><strong>⚠️ Linux users: Click here first</strong></summary>
-
-On Linux, `/tmp` is often a separate filesystem (tmpfs), which causes plugin installation to fail with:
+#### 2. Prompt 缓存倒计时 (Prompt Cache)
 ```
-EXDEV: cross-device link not permitted
+Cache ⏱ 4m32s
 ```
+显示 prompt cache 剩余时间，5分钟倒计时，到期前变黄色警告。
 
-**Fix**: Set TMPDIR before installing:
-```bash
-mkdir -p ~/.cache/tmp && TMPDIR=~/.cache/tmp claude
+#### 3. 会话费用 (Session Cost)
 ```
-
-Then run the install command below in that session. This is a [Claude Code platform limitation](https://github.com/anthropics/claude-code/issues/14799).
-
-</details>
-
+费用 ¥12.1≈$1.68 [DeepSeek]
 ```
-/plugin install claude-hud
+实时估算当前会话的 API 费用，支持第三方模型定价。
+
+**支持的第三方模型：**
+| 提供商 | 模型 | 输入 ($/M tokens) | 输出 ($/M tokens) | 缓存 |
+|--------|------|:---:|:---:|:---:|
+| **OpenAI** | GPT-4o | $2.50 | $10.00 | 默认 |
+| | GPT-4o-mini | $0.15 | $0.60 | 默认 |
+| | o1 | $15.00 | $60.00 | 默认 |
+| | o3 / o3-mini | $10.00 | $40.00 | 默认 |
+| **DeepSeek** | V4 Flash | $0.14 | $0.28 | $0.028 |
+| | V4 Pro | $1.67 | $3.33 | $0.14 |
+| | Chat | $0.50 | $2.00 | $0.10 |
+| | Reasoner | $0.50 | $2.00 | $0.10 |
+| **MiniMax** | M2.7 Highspeed | $0.30 | $0.30 | $0.15 |
+| **Moonshot** | Kimi K2.5 | $0.28 | $1.12 | $0.14 |
+| **Zhipu** | GLM-5 Turbo | $0.35 | $0.40 | $0.09 |
+| | ZAI-ORG/GLM-5 | $0.35 | $0.40 | $0.09 |
+
+**三层定价解析器：**
 ```
-
-After that, reload plugins:
-
-```
-/reload-plugins
-```
-
-
-**Step 3: Configure the statusline**
-```
-/claude-hud:setup
-```
-
-<details>
-<summary><strong>⚠️ Windows users: Click here if setup says no JavaScript runtime was found</strong></summary>
-
-On Windows, Node.js LTS is the supported runtime for Claude HUD setup. If setup says no JavaScript runtime was found, install Node.js for your shell first:
-```powershell
-winget install OpenJS.NodeJS.LTS
-```
-Then restart your shell and run `/claude-hud:setup` again.
-
-</details>
-
-Done! Restart Claude Code to load the new statusLine config, then the HUD will appear.
-
-On Windows, make that a full Claude Code restart after setup writes the new `statusLine` config.
-
----
-
-## What is Claude HUD?
-
-Claude HUD gives you better insights into what's happening in your Claude Code session.
-
-| What You See | Why It Matters |
-|--------------|----------------|
-| **Project path** | Know which project you're in (configurable 1-3 directory levels) |
-| **Context health** | Know exactly how full your context window is before it's too late |
-| **Tool activity** | Watch Claude read, edit, and search files as it happens |
-| **Agent tracking** | See which subagents are running and what they're doing |
-| **Todo progress** | Track task completion in real-time |
-
-## What You See
-
-### Default (2 lines)
-```
-[Opus] │ my-project git:(main*)
-Context █████░░░░░ 45% │ Usage ██░░░░░░░░ 25% (1h 30m / 5h)
-```
-- **Line 1** — Model, provider label when positively identified (for example `Bedrock`, `Vertex`), project path, git branch
-- **Line 2** — Context bar (green → yellow → red) and usage rate limits
-
-### Optional lines (enable via `/claude-hud:configure`)
-```
-◐ Edit: auth.ts | ✓ Read ×3 | ✓ Grep ×2        ← Tools activity
-◐ explore [haiku]: Finding auth code (2m 15s)    ← Agent status
-▸ Fix authentication bug (2/5)                   ← Todo progress
+Layer 1: 用户自定义配置 (最高优先级)
+Layer 2: 远程 pricing.json 更新
+Layer 3: 内置定价表 (最低优先级)
 ```
 
----
-
-## How It Works
-
-Claude HUD uses Claude Code's native **statusline API** — no separate window, no tmux required, works in any terminal.
-
-```
-Claude Code → stdin JSON → claude-hud → stdout → displayed in your terminal
-           ↘ transcript JSONL (tools, agents, todos)
-```
-
-**Key features:**
-- Native token data from Claude Code (not estimated)
-- Scales with Claude Code's reported context window size, including newer 1M-context sessions
-- Parses the transcript for tool/agent activity
-- Updates every ~300ms
-
----
-
-## Configuration
-
-Customize your HUD anytime:
-
-```
-/claude-hud:configure
-```
-
-The guided flow handles layout, language, and common display toggles. Advanced overrides such as
-custom colors and thresholds are preserved there, but you set them by editing the config file directly:
-
-- **First time setup**: Choose a preset (Full/Essential/Minimal), pick a label language, then fine-tune individual elements
-- **Customize anytime**: Toggle items on/off, adjust git display style, switch layouts, or change label language
-- **Preview before saving**: See exactly how your HUD will look before committing changes
-
-### Presets
-
-| Preset | What's Shown |
-|--------|--------------|
-| **Full** | Everything enabled — tools, agents, todos, git, usage, duration |
-| **Essential** | Activity lines + git status, minimal info clutter |
-| **Minimal** | Core only — just model name and context bar |
-
-After choosing a preset, you can turn individual elements on or off.
-
-### Manual Configuration
-
-Edit `~/.claude/plugins/claude-hud/config.json` directly for advanced settings such as `colors.*`,
-`pathLevels`, `maxWidth`, threshold overrides, `display.timeFormat`, and `display.promptCacheTtlSeconds`. Running `/claude-hud:configure`
-preserves those manual settings while still letting you change `language`, layout, and the common
-guided toggles.
-
-Chinese HUD labels are available as an explicit opt-in. English stays the default unless you choose `中文` in `/claude-hud:configure` or set `language` in config. The short `zh` alias remains valid, and new guided config writes the canonical `zh-Hans` value.
-
-### Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `language` | `en` \| `zh` \| `zh-Hans` | `en` | HUD label language. English is the default; set `zh` or `zh-Hans` to enable Simplified Chinese labels. |
-| `lineLayout` | string | `expanded` | Layout: `expanded` (multi-line) or `compact` (single line) |
-| `pathLevels` | 1-3 | 1 | Directory levels to show in project path |
-| `maxWidth` | number \| `null` | `null` | Optional fallback width used only when terminal width detection fails completely |
-| `forceMaxWidth` | boolean | false | Always use `maxWidth` when it is set, even if terminal width detection returns a smaller value |
-| `elementOrder` | string[] | `["project","context","usage","promptCache","memory","environment","tools","agents","todos","sessionTime"]` | Expanded-mode element order. Omit entries to hide them in expanded mode. Existing configs keep their explicit order until updated. |
-| `display.mergeGroups` | string[][] | `[["context","usage"]]` | Expanded-mode groups that should share a line when adjacent. Set `[]` to disable merged lines. |
-| `gitStatus.enabled` | boolean | true | Show git branch in HUD |
-| `gitStatus.showDirty` | boolean | true | Show `*` for uncommitted changes |
-| `gitStatus.showAheadBehind` | boolean | false | Show `↑N ↓N` for ahead/behind remote |
-| `gitStatus.pushWarningThreshold` | number | 0 | Color the ahead count with the warning color at or above this unpushed-commit count (`0` disables it) |
-| `gitStatus.pushCriticalThreshold` | number | 0 | Color the ahead count with the critical color at or above this unpushed-commit count (`0` disables it) |
-| `gitStatus.showFileStats` | boolean | false | Show file change counts `!M +A ✘D ?U` |
-| `gitStatus.branchOverflow` | `truncate` \| `wrap` | `truncate` | Keep current truncation behavior or let the git block wrap onto its own line boundary when possible |
-| `display.showModel` | boolean | true | Show model name `[Opus]` |
-| `display.showAddedDirs` | boolean | true | Show extra workspace directories from `/add-dir` (e.g. `+sparkle +lib-foo`); empty array renders nothing. In both layouts at most 5 dirs render (overflow shown as `+N more`) and basenames are truncated to 24 chars with `…` |
-| `display.addedDirsLayout` | `inline` \| `line` | `inline` | `inline` puts dirs next to the project name with a `+name` prefix per dir; `line` renders them on a separate `Added dirs: name1, name2` line (no `+` prefix, comma-separated) |
-| `display.showContextBar` | boolean | true | Show visual context bar `████░░░░░░` |
-| `display.contextValue` | `percent` \| `tokens` \| `remaining` \| `both` | `percent` | Context display format (`45%`, `45k/200k`, `55%` remaining, or `45% (45k/200k)`) |
-| `display.showConfigCounts` | boolean | false | Show CLAUDE.md, rules, MCPs, hooks counts |
-| `display.showCost` | boolean | false | Show session cost using Claude Code's native `cost.total_cost_usd` when available, with fallbacks for direct Anthropic sessions (transcript-based estimate) and third-party models (configurable pricing table) |
-| `modelPricing.entries` | ModelPricingEntry[] | `[]` | Custom pricing entries that override built-in and remote pricing. Each entry: `pattern` (regex string), `inputUsdPerMillion`, `outputUsdPerMillion`, optional `cacheReadUsdPerMillion`, `cacheCreationUsdPerMillion`, `provider` |
-| `modelPricing.enablePricingUpdate` | boolean | true | Enable the `/claude-hud:update-pricing` command to fetch latest pricing from remote |
-| `modelPricing.pricingUpdateUrl` | string | GitHub raw URL | URL to fetch updated `pricing.json` from |
-| `modelPricing.pricingUpdatedAt` | string | `""` | Auto-maintained ISO timestamp of last successful pricing update |
-| `display.showOutputStyle` | boolean | false | Show the active Claude Code `outputStyle` from settings files as `style: <name>` |
-| `display.showDuration` | boolean | false | Show session duration `⏱️ 5m` |
-| `display.showSpeed` | boolean | false | Show output token speed `out: 42.1 tok/s` |
-| `display.showUsage` | boolean | true | Show Claude subscriber usage limits when available |
-| `display.usageValue` | `percent` \| `remaining` | `percent` | Usage display format (`25%` used, or `75%` remaining) |
-| `display.usageBarEnabled` | boolean | true | Display usage as visual bar instead of text |
-| `display.usageCompact` | boolean | false | Display usage in a shorter text form such as `5h: 25% (1h 30m)`; takes precedence over `display.usageBarEnabled` |
-| `display.showResetLabel` | boolean | true | Show the `resets in` prefix before usage countdowns |
-| `display.timeFormat` | `relative` \| `absolute` \| `both` | `relative` | How reset times are shown in usage windows: countdown only (`resets in 2h 30m`), wall-clock time (`resets at 14:30`), or both (`resets in 2h 30m, at 14:30`) |
-| `display.sevenDayThreshold` | 0-100 | 80 | Show 7-day usage when >= threshold (0 = always) |
-| `display.externalUsagePath` | string | `""` | Optional path to a local usage snapshot file used only when stdin `rate_limits` are missing |
-| `display.externalUsageFreshnessMs` | number | `300000` | Maximum allowed age for the external usage snapshot before it is ignored |
-| `display.showTokenBreakdown` | boolean | true | Show token details at high context (85%+) |
-| `display.showTools` | boolean | false | Show tools activity line |
-| `display.showAgents` | boolean | false | Show agents activity line |
-| `display.showTodos` | boolean | false | Show todos progress line |
-| `display.showSessionName` | boolean | false | Show session slug or custom title from `/rename` |
-| `display.showSessionStartDate` | boolean | false | Show the transcript session start timestamp |
-| `display.showLastResponseAt` | boolean | false | Show how long ago the last assistant response was written |
-| `display.showClaudeCodeVersion` | boolean | false | Show the installed Claude Code version, e.g. `CC v2.1.81` |
-| `display.showMemoryUsage` | boolean | false | Show an approximate system RAM usage line in expanded layout |
-| `display.showPromptCache` | boolean | false | Show a prompt cache countdown based on the last assistant response timestamp in the transcript |
-| `display.promptCacheTtlSeconds` | number | `300` | Prompt cache TTL in seconds. Keep the default for Pro, set `3600` for Max |
-| `colors.context` | color value | `green` | Base color for the context bar and context percentage |
-| `colors.usage` | color value | `brightBlue` | Base color for usage bars and percentages below warning thresholds |
-| `colors.warning` | color value | `yellow` | Warning color for context thresholds and usage warning text |
-| `colors.usageWarning` | color value | `brightMagenta` | Warning color for usage bars and percentages near their threshold |
-| `colors.critical` | color value | `red` | Critical color for limit-reached states and critical thresholds |
-| `colors.model` | color value | `cyan` | Color for the model badge such as `[Opus]` |
-| `colors.project` | color value | `yellow` | Color for the project path |
-| `colors.git` | color value | `magenta` | Color for git wrapper text such as `git:(` and `)` |
-| `colors.gitBranch` | color value | `cyan` | Color for the git branch and branch status text |
-| `colors.label` | color value | `dim` | Color for labels and secondary metadata such as `Context`, `Usage`, counts, and progress text |
-| `colors.custom` | color value | `208` | Color for the optional custom line |
-| `colors.barFilled` | string | `█` | Character used for the filled portion of progress bars |
-| `colors.barEmpty` | string | `░` | Character used for the empty portion of progress bars |
-
-`colors.barFilled` and `colors.barEmpty` accept a single visible grapheme. Control characters, invisible format characters (bidi controls, zero-width joiners, variation selectors), line/paragraph separators, and noncharacters are rejected. Wide characters (emoji, CJK) may affect bar alignment depending on the terminal.
-
-Supported color names: `dim`, `red`, `green`, `yellow`, `magenta`, `cyan`, `brightBlue`, `brightMagenta`. You can also use a 256-color number (`0-255`) or hex (`#rrggbb`).
-
-`display.showMemoryUsage` is fully opt-in and only renders in `expanded` layout. It reports approximate system RAM usage from the local machine, not precise memory pressure inside Claude Code or a specific process. The number may overstate actual pressure because reclaimable OS cache and buffers can still be counted as used memory.
-
-`display.showCost` is fully opt-in. ClaudeHUD prefers the native `cost.total_cost_usd` field that Claude Code provides on stdin when it is available. If that field is absent or invalid for a direct Anthropic session, ClaudeHUD falls back to the existing local transcript-based estimate so the cost line still works on older payloads. The native field is absent before the first API response in a session, so the cost display may stay hidden until then. ClaudeHUD also keeps the cost hidden for known routed providers such as Bedrock and Vertex AI, because cloud-provider billed sessions may report `$0.00` or omit the field even though the session was not literally free.
-
-**Third-party models**: When using non-Anthropic models (e.g. `gpt-4o`, `deepseek-v4-flash`, `kimi-k2.5`), ClaudeHUD estimates cost from token usage via a three-layer pricing table:
-1. **User config** — `config.json` → `modelPricing.entries` (highest priority)
-2. **Remote pricing.json** — fetched via `/claude-hud:update-pricing` command
-3. **Built-in defaults** — 12 entries shipped for OpenAI, DeepSeek, MiniMax, Moonshot, Zhipu
-
-Pricing is matched by regex pattern against the model ID. User entries always take priority. Run `/claude-hud:update-pricing` to fetch the latest pricing from the project's curated list.
-
-`display.showPromptCache` is fully opt-in. When enabled, ClaudeHUD looks at the timestamp of the last assistant response in the local transcript and shows a live countdown until the prompt cache expires. The default TTL is 5 minutes (`300` seconds). Set `display.promptCacheTtlSeconds` to `3600` if you want a 1-hour Max-style window. If the transcript does not have an assistant timestamp yet, the cache element stays hidden.
-
-### Usage Limits
-
-Usage display is **enabled by default** when Claude Code provides subscriber `rate_limits` data on stdin. It shows your rate limit consumption on line 2 alongside the context bar.
-
-Set `display.usageValue` to `remaining` to show quota left instead of quota used. Warning colors and 7-day threshold checks still use the underlying used percentage.
-
-ClaudeHUD prefers the official statusline stdin payload. If `rate_limits` are missing, you can opt into a local sidecar fallback by setting `display.externalUsagePath` to a JSON snapshot written by another tool such as a proxy. Stdin still wins whenever both sources exist.
-
-The fallback snapshot must be fresh enough (`display.externalUsageFreshnessMs`) and include valid `updated_at`, plus a `five_hour` window, `seven_day` window, or `balance_label`. `balance_label` is optional text for prepaid provider balances; it is trimmed, length-limited, and sanitized before display. Invalid JSON, stale files, or invalid timestamps are ignored quietly.
-
-Free/weekly-only accounts render the weekly window by itself instead of showing a ghost `5h: --` placeholder.
-
-The 7-day percentage appears when above the `display.sevenDayThreshold` (default 80%):
-
-```
-Context █████░░░░░ 45% │ Usage ██░░░░░░░░ 25% (1h 30m / 5h) | ██████████ 85% (2d / 7d)
-```
-
-To disable, set `display.showUsage` to `false`.
-
-Reset times use relative countdowns by default. Set `display.timeFormat` to `absolute` for wall-clock
-times or `both` to show both forms. This setting is manual-only today; `/claude-hud:configure`
-preserves it without editing it.
-
-Set `display.showResetLabel` to `false` if you want shorter usage countdowns such as `(3h 17m)` instead of `(resets in 3h 17m)`.
-
-Set `display.usageCompact` to `true` if you want the shorter usage-only form, for example `5h: 25% (1h 30m)`. Compact usage takes precedence over `display.usageBarEnabled`.
-
-**Requirements:**
-- Claude Code must include subscriber `rate_limits` data on stdin for the current session
-- Not available for API-key-only users
-
-**Troubleshooting:** If usage doesn't appear:
-- Ensure you're logged in with a Claude subscriber account (not API key)
-- Check `display.showUsage` is not set to `false` in config
-- API users see no usage display (they have pay-per-token, not rate limits)
-- AWS Bedrock models display `Bedrock` and hide usage limits (usage is managed in AWS)
-- Google Vertex AI models display `Vertex` and hide cost estimates (pricing differs from Anthropic direct)
-- Claude Code may leave `rate_limits` empty until after the first model response in a session
-- Some Claude Code builds and subscription tiers may still omit `rate_limits`, even after the first response
-- If you configured `display.externalUsagePath`, ClaudeHUD will try that local snapshot before hiding usage
-- ClaudeHUD never falls back to credential scraping or undocumented API calls
-
-Example fallback snapshot:
-
+**CNY 定价支持：** 可在配置中直接填写人民币价格，系统自动按 ¥7.2/$1 转换为 USD。
 ```json
 {
-  "updated_at": "2026-04-20T12:00:00.000Z",
-  "five_hour": {
-    "used_percentage": 42,
-    "resets_at": "2026-04-20T15:00:00.000Z"
-  },
-  "seven_day": {
-    "used_percentage": 84,
-    "resets_at": "2026-04-27T12:00:00.000Z"
-  }
+  "pattern": "^my-model$",
+  "inputUsdPerMillion": 1.0,   // ¥7.2 ÷ 7.2 = $1.0
+  "outputUsdPerMillion": 2.0,  // ¥14.4 ÷ 7.2 = $2.0
+  "currency": "cny",
+  "provider": "MyProvider"
 }
 ```
 
-### Example Configuration
+> **注意**：对于第三方模型，HUD 会跳过 Claude Code 报告的原生费用（按 Anthropic 定价计算，不准确），改用基于实际 token 用量 × 配置单价的估算。
+
+#### 4. 后台任务 (Background Tasks)
+```
+BG 2/5
+```
+OMC 风格的后台任务槽显示，最多显示 5 个槽位。
+
+#### 5. 额外工作目录 (Added Directories)
+```
+添加目录: project-a, project-b
+```
+显示通过 `/add` 添加的额外工作目录。
+
+#### 6. 输出风格 (Output Style)
+```
+风格: streaming
+```
+显示输出模式指示器。
+
+#### 7. 会话 Token 统计 (Session Tokens)
+```
+Tok: 12.8M (入: 7k, 出: 28k, 缓存: 12.8M)
+```
+显示整个会话的累计 Token 使用量。
+
+#### 8. Advisor 模型
+```
+顾问: Opus 4.7
+```
+当配置了 `/advisor` 时显示顾问模型。
+
+#### 9. 上次响应时间 (Last Response At)
+```
+响应: 2m ago
+```
+显示最后一次 AI 响应的时间。
+
+#### 10. 会话开始日期 (Session Start Date)
+```
+开始: 2025-06-12 14:30
+```
+显示会话开始日期时间。
+
+#### 11. 内存使用 (Memory Usage)
+```
+内存: ████░░░░░░ 42%
+```
+显示系统内存使用情况。
+
+#### 12. Claude Code 版本
+```
+CC v2.1.115
+```
+显示当前 Claude Code 版本号。
+
+### 📊 显示模式改进
+
+#### Context 显示模式
+- `percent` - 仅百分比 (45%)
+- `tokens` - 仅 Token 数 (111k/1.0M)
+- `both` - 百分比 + Token 数
+- `percentTokens` ⭐ - 百分比 + Token + 速度 (推荐)
+
+#### Usage 显示模式
+- `percent` - 使用百分比
+- `remaining` - 剩余百分比
+- `both` - 两者都显示
+
+#### 时间格式
+- `relative` - 相对时间 ("3分钟后")
+- `absolute` - 绝对时间 ("14:30")
+- `both` ⭐ - 两者都显示 (推荐)
+- `elapsed` - 已用时间
+- `elapsedAndAbsolute` - 已用 + 绝对
+
+### 🎯 预设配置
+
+#### Recommended (推荐) ⭐
+默认配置，经过优化的全功能设置：
+- 语言：中文
+- 主题：Matrix (黑客帝国绿)
+- 布局：Expanded (多行)
+- 元素顺序：model → project → git → context → usage → promptCache → tools → agents → todos → sessionTime
+- 启用：所有 Activity + Info + Enhanced 功能
+- 自定义行：📊 Dashboard Mode
+
+#### Full (全功能)
+开启**所有**功能，包括所有高级选项和最大显示设置。
+
+#### Essential (精简)
+仅核心活动信息和 Git 状态。
+
+### ⚙️ 配置示例
 
 ```json
 {
-  "language": "zh",
+  "language": "zh-Hans",
+  "theme": "matrix",
   "lineLayout": "expanded",
+  "showSeparators": true,
   "pathLevels": 2,
-  "elementOrder": ["project", "tools", "context", "usage", "memory", "environment", "agents", "todos", "sessionTime"],
+  "elementOrder": [
+    "model", "project", "git", "context", "usage",
+    "promptCache", "tools", "agents", "todos", "sessionTime"
+  ],
   "gitStatus": {
     "enabled": true,
     "showDirty": true,
@@ -309,93 +187,120 @@ Example fallback snapshot:
     "showFileStats": true
   },
   "display": {
+    "showModel": true,
+    "showProject": true,
+    "showContextBar": true,
+    "contextValue": "percentTokens",
+    "showConfigCounts": true,
+    "showCost": true,
+    "showDuration": true,
+    "showSpeed": true,
+    "showTokenBreakdown": true,
+    "showUsage": true,
     "showTools": true,
     "showAgents": true,
     "showTodos": true,
-    "showConfigCounts": true,
-    "showDuration": true,
-    "showMemoryUsage": true
+    "showSessionName": true,
+    "showEffortLevel": true,
+    "showPromptCache": true,
+    "showSessionTokens": true,
+    "showOutputStyle": true,
+    "showBackgroundTasks": true,
+    "showAddedDirs": true,
+    "showAdvisor": false,
+    "theme": "matrix",
+    "customLine": "📊 Dashboard Mode",
+    "timeFormat": "both",
+    "safeMode": false
   },
-  "colors": {
-    "context": "cyan",
-    "usage": "cyan",
-    "warning": "yellow",
-    "usageWarning": "magenta",
-    "critical": "red",
-    "model": "cyan",
-    "project": "yellow",
-    "git": "magenta",
-    "gitBranch": "cyan",
-    "label": "dim",
-    "custom": "#FF6600"
+  "modelPricing": {
+    "entries": [
+      {
+        "pattern": "^my-model$",
+        "inputUsdPerMillion": 1.0,
+        "outputUsdPerMillion": 2.0,
+        "cacheReadUsdPerMillion": 0.2,
+        "cacheCreationUsdPerMillion": 0.2,
+        "currency": "cny",
+        "provider": "MyProvider"
+      }
+    ],
+    "enablePricingUpdate": true
   }
 }
 ```
 
-### Display Examples
+## 🚀 安装
 
-**1 level (default):** `[Opus] │ my-project git:(main)`
-
-**2 levels:** `[Opus] │ apps/my-project git:(main)`
-
-**3 levels:** `[Opus] │ dev/apps/my-project git:(main)`
-
-**With dirty indicator:** `[Opus] │ my-project git:(main*)`
-
-**With ahead/behind:** `[Opus] │ my-project git:(main ↑2 ↓1)`
-
-**With file stats:** `[Opus] │ my-project git:(main* !3 +1 ?2)`
-- `!` = modified files, `+` = added/staged, `✘` = deleted, `?` = untracked
-- Counts of 0 are omitted for cleaner display
-
-### Troubleshooting
-
-**Config not applying?**
-- Check for JSON syntax errors: invalid JSON silently falls back to defaults
-- Ensure valid values: `pathLevels` must be 1, 2, or 3; `lineLayout` must be `expanded` or `compact`; `maxWidth` must be a positive number
-- Delete config and run `/claude-hud:configure` to regenerate
-
-**Git status missing?**
-- Verify you're in a git repository
-- Check `gitStatus.enabled` is not `false` in config
-
-**Tool/agent/todo lines missing?**
-- These are hidden by default — enable with `showTools`, `showAgents`, `showTodos` in config
-- They also only appear when there's activity to show
-
-**HUD not appearing after setup?**
-- Restart Claude Code so it picks up the new statusLine config
-- On macOS, fully quit Claude Code and run `claude` again in your terminal
-
----
-
-## Requirements
-
-- Claude Code v1.0.80+
-- macOS/Linux: Node.js 18+ or Bun
-- Windows: Node.js 18+
-
----
-
-## Development
+### 方式一：GitHub 安装
 
 ```bash
-git clone https://github.com/jarrodwatts/claude-hud
-cd claude-hud
-npm ci && npm run build
-npm test
+/plugin install johnleeGitHub/claude-hud-enhanced
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+### 方式二：本地安装
 
----
+```bash
+# 克隆仓库
+git clone https://github.com/johnleeGitHub/claude-hud-enhanced.git
 
-## License
+# 安装
+/plugin install /path/to/claude-hud-enhanced
+```
 
-MIT — see [LICENSE](LICENSE)
+## 🎮 使用
 
----
+### 初始设置
+```
+/hud-setup
+```
 
-## Star History
+### 重新配置
+```
+/hud-configure
+```
 
-[![Star History Chart](https://api.star-history.com/svg?repos=jarrodwatts/claude-hud&type=Date)](https://star-history.com/#jarrodwatts/claude-hud&Date)
+配置向导包含：
+1. 布局选择 (Expanded/Compact)
+2. 预设选择 (Recommended/Full/Essential)
+3. 语言选择 (中文/English)
+4. 主题选择 (12个主题)
+5. 功能开关 (所有增强功能)
+
+### 更新模型定价
+```
+/hud-update-pricing
+```
+
+## 📁 与原版差异
+
+| 功能 | 原版 | 增强版 |
+|------|------|--------|
+| 主题数量 | 1 (default) | 12 |
+| 推理力度显示 | ❌ | ✅ |
+| Prompt Cache 倒计时 | ❌ | ✅ |
+| 会话费用 | ❌ | ✅ |
+| 后台任务 | ❌ | ✅ |
+| 额外工作目录 | ❌ | ✅ |
+| 输出风格 | ❌ | ✅ |
+| 会话 Token 统计 | ❌ | ✅ |
+| Advisor 模型 | ❌ | ✅ |
+| 上次响应时间 | ❌ | ✅ |
+| 会话开始日期 | ❌ | ✅ |
+| 内存使用 | ❌ | ✅ |
+| 速度显示位置 | Project 行 | Context 行后 |
+
+## 📝 配置位置
+
+```
+~/.claude/plugins/claude-hud/config.json
+```
+
+## 🏷️ 版本
+
+- 原版: `0.1.0`
+- 增强版: `0.3.0`
+
+## 📜 License
+
+MIT - 基于 [claude-hud](https://github.com/jarrodwatts/claude-hud) by Jarrod Watts

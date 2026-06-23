@@ -115,8 +115,9 @@ export type MainDeps = {
 ## Configuration
 
 **Setup commands:**
-- `/claude-hud:setup` - Initial statusLine configuration
-- `/claude-hud:configure` - Guided configuration (presets, toggles, layout)
+- `/hud-setup` - Initial statusLine configuration
+- `/hud-configure` - Guided configuration (presets, toggles, layout)
+- `/hud-update-pricing` - Update model pricing from remote JSON
 
 **Config file:** `~/.claude/plugins/claude-hud/config.json`
 

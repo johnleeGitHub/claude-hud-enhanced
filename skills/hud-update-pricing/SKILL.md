@@ -13,7 +13,7 @@ Updates the third-party model pricing table by fetching the latest prices.
 ### 1. Read config and fetch URL
 ```bash
 HUDP="$HOME/.claude/plugins/claude-hud-enhanced"
-UPDATE_URL=$(node -e "const c=JSON.parse(require('fs').readFileSync('$HUDP/config.json','utf8'));console.log(c.modelPricing?.pricingUpdateUrl||'https://raw.githubusercontent.com/linuxdeepin/claude-hud-enhanced/main/pricing.json')")
+UPDATE_URL=$(node -e "const c=JSON.parse(require('fs').readFileSync('$HUDP/config.json','utf8'));console.log(c.modelPricing?.pricingUpdateUrl||'https://raw.githubusercontent.com/johnleeGitHub/claude-hud-enhanced/master/pricing.json')")
 echo "Fetching from: $UPDATE_URL"
 ```
 
