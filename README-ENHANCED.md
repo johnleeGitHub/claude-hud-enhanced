@@ -36,9 +36,45 @@ Cache ⏱ 4m32s
 
 #### 3. 会话费用 (Session Cost)
 ```
-费用 $12.11
+费用 ¥12.1≈$1.68 [DeepSeek]
 ```
-实时估算当前会话的 API 费用。
+实时估算当前会话的 API 费用，支持第三方模型定价。
+
+**支持的第三方模型：**
+| 提供商 | 模型 | 输入 ($/M tokens) | 输出 ($/M tokens) | 缓存 |
+|--------|------|:---:|:---:|:---:|
+| **OpenAI** | GPT-4o | $2.50 | $10.00 | 默认 |
+| | GPT-4o-mini | $0.15 | $0.60 | 默认 |
+| | o1 | $15.00 | $60.00 | 默认 |
+| | o3 / o3-mini | $10.00 | $40.00 | 默认 |
+| **DeepSeek** | V4 Flash | $0.14 | $0.28 | $0.028 |
+| | V4 Pro | $1.67 | $3.33 | $0.14 |
+| | Chat | $0.50 | $2.00 | $0.10 |
+| | Reasoner | $0.50 | $2.00 | $0.10 |
+| **MiniMax** | M2.7 Highspeed | $0.30 | $0.30 | $0.15 |
+| **Moonshot** | Kimi K2.5 | $0.28 | $1.12 | $0.14 |
+| **Zhipu** | GLM-5 Turbo | $0.35 | $0.40 | $0.09 |
+| | ZAI-ORG/GLM-5 | $0.35 | $0.40 | $0.09 |
+
+**三层定价解析器：**
+```
+Layer 1: 用户自定义配置 (最高优先级)
+Layer 2: 远程 pricing.json 更新
+Layer 3: 内置定价表 (最低优先级)
+```
+
+**CNY 定价支持：** 可在配置中直接填写人民币价格，系统自动按 ¥7.2/$1 转换为 USD。
+```json
+{
+  "pattern": "^my-model$",
+  "inputUsdPerMillion": 1.0,   // ¥7.2 ÷ 7.2 = $1.0
+  "outputUsdPerMillion": 2.0,  // ¥14.4 ÷ 7.2 = $2.0
+  "currency": "cny",
+  "provider": "MyProvider"
+}
+```
+
+> **注意**：对于第三方模型，HUD 会跳过 Claude Code 报告的原生费用（按 Anthropic 定价计算，不准确），改用基于实际 token 用量 × 配置单价的估算。
 
 #### 4. 后台任务 (Background Tasks)
 ```
@@ -176,6 +212,20 @@ CC v2.1.115
     "customLine": "📊 Dashboard Mode",
     "timeFormat": "both",
     "safeMode": false
+  },
+  "modelPricing": {
+    "entries": [
+      {
+        "pattern": "^my-model$",
+        "inputUsdPerMillion": 1.0,
+        "outputUsdPerMillion": 2.0,
+        "cacheReadUsdPerMillion": 0.2,
+        "cacheCreationUsdPerMillion": 0.2,
+        "currency": "cny",
+        "provider": "MyProvider"
+      }
+    ],
+    "enablePricingUpdate": true
   }
 }
 ```

@@ -13,9 +13,12 @@ npm ci               # Install dependencies
 npm run build        # Build TypeScript to dist/
 npm run dev          # Watch mode for development
 
-# Test
-npm test             # Run all tests
+# Test (Node.js test runner — requires build first)
+npm test             # Run all tests (node --test after build)
 npm run test:coverage # Run tests with coverage
+
+# Test (Bun — runs source .ts directly, no build needed)
+bun test ./tests/pricing/pricing-models.test.ts
 
 # Manual testing with sample stdin
 echo '{"model":{"display_name":"Opus"},"context_window":{"current_usage":{"input_tokens":45000},"context_window_size":200000}}' | node dist/index.js
@@ -155,13 +158,28 @@ Context █████░░░░░ 45% │ Usage ██░░░░░░░
 
 ## Testing
 
-Tests use Node.js built-in `node:test` with snapshot testing:
+Tests use Node.js built-in `node:test` with snapshot testing and Bun test runner for TypeScript source:
 
 ```bash
-npm test                              # Run all tests
+npm test                              # Run all tests (build + node --test)
 npm run test:coverage                 # With coverage report
 UPDATE_SNAPSHOTS=1 npm test           # Update snapshots
+bun test ./tests/pricing/pricing-models.test.ts  # Run pricing tests directly (no build needed)
 ```
+
+**Test files:**
+- `tests/enhanced-features/` — Theme and config tests (Bun)
+- `tests/pricing/pricing-models.test.ts` — Third-party model pricing tests (65 tests, 425 assertions)
+
+**Pricing test coverage includes:**
+- All 12 built-in model patterns match correctly
+- Model name normalization (case, separators, prefixes, suffixes)
+- Three-layer resolver priority (user config → remote → built-in)
+- CNY currency to USD conversion
+- `validatePricingResponse` boundary cases (null, NaN, Infinity, negative)
+- `writePricingFile` atomic file operations
+- Anthropic pricing fallback (Opus/Sonnet/Haiku)
+- Realistic DeepSeek session cost scenarios
 
 Snapshot fixtures are in `tests/fixtures/`. Test stdin parsing with sample JSON piped to `dist/index.js`.
 

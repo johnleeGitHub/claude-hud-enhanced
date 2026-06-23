@@ -5,8 +5,13 @@ All notable changes to Claude HUD will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Third-party model cost was using Claude Code's native `stdin.cost.total_cost_usd` (Anthropic pricing) instead of configured pricing. Native cost is now skipped for non-Anthropic models (DeepSeek, OpenAI, MiniMax, Moonshot, Zhipu), falling back to the three-layer pricing resolver.
 - Windows + PowerShell `/claude-hud:setup` now writes a `statusline.ps1` wrapper with a guarded width fallback and corrected version-directory glob (#521).
 - Added Windows PowerShell 5.1 guidance for writing `settings.json` without a UTF-8 BOM.
+
+### Added
+- `isThirdPartyModelId()` detection function in `stdin.ts` for identifying non-Anthropic providers.
+- Comprehensive pricing test suite (`tests/pricing/pricing-models.test.ts`) covering all 12 built-in models, name normalization, three-layer resolver priority, CNY currency conversion, and pricing file validation (65 tests, 425 assertions).
 
 ## [0.0.12] - 2026-04-04
 
