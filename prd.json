@@ -1,0 +1,63 @@
+{
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "第三方模型定价匹配测试",
+      "description": "验证 pricing-loader.ts 中的模型匹配逻辑能正确匹配所有 built-in 和 pricing.json 中的模型",
+      "acceptanceCriteria": [
+        "每个 built-in 模型 pattern 都能正确匹配对应的模型名称",
+        "每个 pricing.json 中的模型 pattern 都能正确匹配",
+        "不匹配的模型名称返回 null",
+        "模型名称规范化（大小写、分隔符、括号）能正确处理各种输入格式"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-002",
+      "title": "价格计算测试",
+      "description": "验证 cost.ts 中的费用计算逻辑",
+      "acceptanceCriteria": [
+        "calculateUsd 能正确计算 token→USD 的转换",
+        "calculateCostFromPricing 能正确分解 input/output/cache 费用",
+        "estimateSessionCost 能正确使用 Anthropic 和第三方定价",
+        "formatUsd 对不同数值范围输出正确格式"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-003",
+      "title": "CNY 货币转换测试",
+      "description": "验证 CNY→USD 转换和格式化显示逻辑",
+      "acceptanceCriteria": [
+        "loadPricingFromDisk 中 currency: 'cny' 条目能正确转换为 USD",
+        "formatCny 对不同数值范围输出正确格式",
+        "formatCostWithCny 在 zh 语言环境下优先显示 CNY",
+        "CNY_TO_USD = 7.2 汇率正确"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-004",
+      "title": "Pricing JSON 有效性测试",
+      "description": "验证 update-pricing.ts 中的验证和写入逻辑",
+      "acceptanceCriteria": [
+        "validatePricingResponse 能正确识别有效/无效的 pricing payload",
+        "writePricingFile 能原子性写入 pricing 文件",
+        "pricing.json 文件本身格式有效、所有条目完整"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-005",
+      "title": "三层层级解析测试",
+      "description": "验证 getModelPricing 的用户配置→远程→内置的优先级逻辑",
+      "acceptanceCriteria": [
+        "用户配置条目优先级高于内置条目",
+        "远程加载条目优先级高于内置条目",
+        "所有层级都 miss 时返回 null",
+        "无效 regex pattern 被静默跳过"
+      ],
+      "passes": true
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import type { HudModelPricingConfig, ModelPricing, SessionTokenUsage, StdinData } from './types.js';
-import { isBedrockModelId, isVertexModelId } from './stdin.js';
+import { isBedrockModelId, isVertexModelId, isThirdPartyModelId } from './stdin.js';
 import { getModelPricing } from './pricing-loader.js';
 
 type AnthropicPricing = {
@@ -157,6 +157,12 @@ function getNativeCostUsd(stdin: StdinData): number | null {
   }
 
   if (isVertexModelId(stdin.model?.id)) {
+    return null;
+  }
+
+  // Third-party models (DeepSeek, OpenAI, etc.) report inaccurate native cost
+  // from the proxy. Fall back to estimate with configured pricing instead.
+  if (isThirdPartyModelId(stdin.model?.id) || isThirdPartyModelId(stdin.model?.display_name)) {
     return null;
   }
 
