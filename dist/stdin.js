@@ -253,6 +253,26 @@ export function isVertexModelId(modelId) {
     }
     return modelId.includes('@');
 }
+// Known third-party providers whose native cost from stdin is unreliable.
+// When a model ID or display name matches, the HUD falls back to the
+// three-layer pricing resolver (user config → remote → built-in).
+const THIRD_PARTY_PROVIDER_PATTERNS = [
+    /\bdeepseek\b/i,
+    /\bgpt-\b/i,
+    /\bo1\b/i,
+    /\bo3\b/i,
+    /\bminimax\b/i,
+    /\bmoonshot\b/i,
+    /\bkimi\b/i,
+    /\bglm-\b/i,
+    /\bzai-org\b/i,
+];
+export function isThirdPartyModelId(modelId) {
+    if (!modelId) {
+        return false;
+    }
+    return THIRD_PARTY_PROVIDER_PATTERNS.some((pattern) => pattern.test(modelId));
+}
 const ENTERPRISE_MODEL_IDS = new Set(['opusplan', 'sonnetplan', 'haikuplan']);
 export function isEnterpriseModelId(modelId) {
     if (!modelId) {

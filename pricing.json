@@ -59,7 +59,7 @@
       "provider": "DeepSeek"
     },
     {
-      "pattern": "^minimax/m2\\.7-highspeed$",
+      "pattern": "^minimax/m2[-.]7-highspeed$",
       "inputUsdPerMillion": 0.3,
       "outputUsdPerMillion": 0.3,
       "cacheReadUsdPerMillion": 0.15,
@@ -67,7 +67,7 @@
       "provider": "MiniMax"
     },
     {
-      "pattern": "^moonshot/kimi-k2\\.5$",
+      "pattern": "^moonshot/kimi-k2[-.]5$",
       "inputUsdPerMillion": 0.28,
       "outputUsdPerMillion": 1.12,
       "cacheReadUsdPerMillion": 0.14,

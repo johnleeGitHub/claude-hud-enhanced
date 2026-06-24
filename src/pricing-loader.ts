@@ -19,9 +19,9 @@ export const BUILTIN_MODEL_PRICING: ModelPricingEntry[] = [
   { pattern: '^deepseek-chat$',                         inputUsdPerMillion: 0.50,  outputUsdPerMillion: 2.00,  cacheReadUsdPerMillion: 0.10,  cacheCreationUsdPerMillion: 0.10, provider: 'DeepSeek' },
   { pattern: '^deepseek-reasoner$',                     inputUsdPerMillion: 0.50,  outputUsdPerMillion: 2.00,  cacheReadUsdPerMillion: 0.10,  cacheCreationUsdPerMillion: 0.10, provider: 'DeepSeek' },
   // MiniMax (supports caching ~50% discount)
-  { pattern: '^minimax/m2\\.7-highspeed$',              inputUsdPerMillion: 0.30, outputUsdPerMillion: 0.30,  cacheReadUsdPerMillion: 0.15,  cacheCreationUsdPerMillion: 0.15, provider: 'MiniMax' },
+  { pattern: '^minimax/m2[-.]7-highspeed$',              inputUsdPerMillion: 0.30, outputUsdPerMillion: 0.30,  cacheReadUsdPerMillion: 0.15,  cacheCreationUsdPerMillion: 0.15, provider: 'MiniMax' },
   // Moonshot / Kimi (cache hit = 50% of input)
-  { pattern: '^moonshot/kimi-k2\\.5$',                  inputUsdPerMillion: 0.28, outputUsdPerMillion: 1.12,  cacheReadUsdPerMillion: 0.14,  cacheCreationUsdPerMillion: 0.14,  provider: 'Moonshot' },
+  { pattern: '^moonshot/kimi-k2[-.]5$',                  inputUsdPerMillion: 0.28, outputUsdPerMillion: 1.12,  cacheReadUsdPerMillion: 0.14,  cacheCreationUsdPerMillion: 0.14,  provider: 'Moonshot' },
   // Zhipu / GLM-5 (cache hit ~25% of input per official GLM-5 pricing)
   { pattern: '^glm-5-turbo$',                           inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  cacheReadUsdPerMillion: 0.09,  cacheCreationUsdPerMillion: 0.09, provider: 'Zhipu' },
   { pattern: '^zai-org/glm-5$',                        inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  cacheReadUsdPerMillion: 0.09,  cacheCreationUsdPerMillion: 0.09, provider: 'Zhipu' },

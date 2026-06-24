@@ -2,6 +2,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { getHudPluginDir } from './claude-config-dir.js';
+/** CNY→USD conversion rate used when currency: "cny" is specified in pricing entries */
+const CNY_TO_USD = 7.2;
+function roundCnyToUsd(cny) {
+    return Number((cny / CNY_TO_USD).toFixed(4));
+}
 export const DEFAULT_ELEMENT_ORDER = [
     'project',
     'addedDirs',
@@ -66,6 +71,7 @@ export const DEFAULT_CONFIG = {
         promptCacheTtlSeconds: 300,
         showSessionTokens: false,
         showOutputStyle: false,
+        showCnyCost: false,
         showSessionStartDate: false,
         showLastResponseAt: false,
         mergeGroups: DEFAULT_MERGE_GROUPS.map(group => [...group]),
@@ -105,6 +111,12 @@ export const DEFAULT_CONFIG = {
         custom: 208,
         barFilled: '█',
         barEmpty: '░',
+    },
+    modelPricing: {
+        entries: [],
+        enablePricingUpdate: true,
+        pricingUpdateUrl: 'https://raw.githubusercontent.com/linuxdeepin/claude-hud-enhanced/main/pricing.json',
+        pricingUpdatedAt: '',
     },
 };
 export function getConfigPath() {
@@ -307,6 +319,49 @@ function validateFreshnessMs(value) {
     }
     return Math.max(0, Math.floor(value));
 }
+const MAX_PRICING_URL_LENGTH = 512;
+function validatePricingEntry(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value))
+        return false;
+    const entry = value;
+    if (typeof entry.pattern !== 'string' || entry.pattern.length === 0)
+        return false;
+    if (typeof entry.inputUsdPerMillion !== 'number' || !Number.isFinite(entry.inputUsdPerMillion) || entry.inputUsdPerMillion < 0)
+        return false;
+    if (typeof entry.outputUsdPerMillion !== 'number' || !Number.isFinite(entry.outputUsdPerMillion) || entry.outputUsdPerMillion < 0)
+        return false;
+    return true;
+}
+function validatePricingEntries(value) {
+    if (!Array.isArray(value))
+        return [];
+    return value
+        .filter(validatePricingEntry)
+        .map(convertCnyEntry);
+}
+/**
+ * Convert a pricing entry from CNY to USD if it has currency: "cny".
+ * Entries without the currency field are returned as-is.
+ * After conversion the currency field is stripped.
+ */
+function convertCnyEntry(entry) {
+    const raw = entry;
+    const currency = typeof raw.currency === 'string' ? raw.currency.toLowerCase() : 'usd';
+    if (currency !== 'cny')
+        return entry;
+    return {
+        pattern: entry.pattern,
+        inputUsdPerMillion: roundCnyToUsd(entry.inputUsdPerMillion),
+        outputUsdPerMillion: roundCnyToUsd(entry.outputUsdPerMillion),
+        cacheReadUsdPerMillion: entry.cacheReadUsdPerMillion !== undefined
+            ? roundCnyToUsd(entry.cacheReadUsdPerMillion)
+            : undefined,
+        cacheCreationUsdPerMillion: entry.cacheCreationUsdPerMillion !== undefined
+            ? roundCnyToUsd(entry.cacheCreationUsdPerMillion)
+            : undefined,
+        provider: entry.provider,
+    };
+}
 export function mergeConfig(userConfig) {
     const migrated = migrateConfig(userConfig);
     const language = validateLanguage(migrated.language)
@@ -430,6 +485,9 @@ export function mergeConfig(userConfig) {
         showOutputStyle: typeof migrated.display?.showOutputStyle === 'boolean'
             ? migrated.display.showOutputStyle
             : DEFAULT_CONFIG.display.showOutputStyle,
+        showCnyCost: typeof migrated.display?.showCnyCost === 'boolean'
+            ? migrated.display.showCnyCost
+            : DEFAULT_CONFIG.display.showCnyCost,
         showSessionStartDate: typeof migrated.display?.showSessionStartDate === 'boolean'
             ? migrated.display.showSessionStartDate
             : DEFAULT_CONFIG.display.showSessionStartDate,
@@ -523,7 +581,19 @@ export function mergeConfig(userConfig) {
             ? migrated.colors.barEmpty
             : DEFAULT_CONFIG.colors.barEmpty,
     };
-    return { language, lineLayout, showSeparators, pathLevels, maxWidth, forceMaxWidth, elementOrder, gitStatus, display, colors };
+    const modelPricing = {
+        entries: validatePricingEntries(migrated.modelPricing?.entries),
+        enablePricingUpdate: typeof migrated.modelPricing?.enablePricingUpdate === 'boolean'
+            ? migrated.modelPricing.enablePricingUpdate
+            : DEFAULT_CONFIG.modelPricing.enablePricingUpdate,
+        pricingUpdateUrl: typeof migrated.modelPricing?.pricingUpdateUrl === 'string'
+            ? migrated.modelPricing.pricingUpdateUrl.slice(0, MAX_PRICING_URL_LENGTH)
+            : DEFAULT_CONFIG.modelPricing.pricingUpdateUrl,
+        pricingUpdatedAt: typeof migrated.modelPricing?.pricingUpdatedAt === 'string'
+            ? migrated.modelPricing.pricingUpdatedAt
+            : DEFAULT_CONFIG.modelPricing.pricingUpdatedAt,
+    };
+    return { language, lineLayout, showSeparators, pathLevels, maxWidth, forceMaxWidth, elementOrder, gitStatus, display, colors, modelPricing };
 }
 export async function loadConfig() {
     const configPath = getConfigPath();

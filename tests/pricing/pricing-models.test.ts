@@ -124,11 +124,8 @@ const MODEL_TEST_CASES: ModelTestCase[] = [
   // ── MiniMax ──
   {
     name: 'minimax/m2.7-highspeed',
-    pattern: '^minimax/m2\\.7-highspeed$',
-    // NOTE: Pattern uses \\. (literal dot) but normalizePricingModelName
-    // converts dots to hyphens, so no normalized name can match this pattern.
-    // This is a known issue in the builtin pricing entries.
-    matchVariants: [],
+    pattern: '^minimax/m2[-.]7-highspeed$',
+    matchVariants: ['minimax/m2.7-highspeed', 'minimax/m2-7-highspeed', 'MiniMax/M2.7 Highspeed'],
     noMatchVariants: ['minimax', 'm2.7', 'minimax/m2.7'],
     expectedInputUsd: 0.3,
     expectedOutputUsd: 0.3,
@@ -137,9 +134,8 @@ const MODEL_TEST_CASES: ModelTestCase[] = [
   // ── Moonshot / Kimi ──
   {
     name: 'moonshot/kimi-k2.5',
-    pattern: '^moonshot/kimi-k2\\.5$',
-    // NOTE: Same normalization issue as minimax - dots become hyphens
-    matchVariants: [],
+    pattern: '^moonshot/kimi-k2[-.]5$',
+    matchVariants: ['moonshot/kimi-k2.5', 'moonshot/kimi-k2-5', 'Moonshot/Kimi-K2.5'],
     noMatchVariants: ['moonshot', 'kimi-k2.5', 'moonshot/kimi-k2'],
     expectedInputUsd: 0.28,
     expectedOutputUsd: 1.12,

@@ -1,4 +1,5 @@
 import type { Language } from './i18n/types.js';
+import type { HudModelPricingConfig } from './types.js';
 export type LineLayoutType = 'compact' | 'expanded';
 export type AutocompactBufferMode = 'enabled' | 'disabled';
 export type ContextValueMode = 'percent' | 'tokens' | 'remaining' | 'both' | 'percentTokens';
@@ -83,6 +84,7 @@ export interface HudConfig {
         promptCacheTtlSeconds: number;
         showSessionTokens: boolean;
         showOutputStyle: boolean;
+        showCnyCost: boolean;
         showSessionStartDate: boolean;
         showLastResponseAt: boolean;
         mergeGroups: HudElement[][];
@@ -109,6 +111,7 @@ export interface HudConfig {
         theme: string;
     };
     colors: HudColorOverrides;
+    modelPricing: HudModelPricingConfig;
 }
 export declare const DEFAULT_CONFIG: HudConfig;
 export declare function getConfigPath(): string;
