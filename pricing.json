@@ -89,6 +89,38 @@
       "cacheReadUsdPerMillion": 0.09,
       "cacheCreationUsdPerMillion": 0.09,
       "provider": "Zhipu"
+    },
+    {
+      "pattern": "^glm-5[-.]1$",
+      "inputUsdPerMillion": 0.98,
+      "outputUsdPerMillion": 3.08,
+      "cacheReadUsdPerMillion": 0.182,
+      "cacheCreationUsdPerMillion": 0.182,
+      "provider": "Zhipu"
+    },
+    {
+      "pattern": "^zai-org/glm-5[-.]1$",
+      "inputUsdPerMillion": 0.98,
+      "outputUsdPerMillion": 3.08,
+      "cacheReadUsdPerMillion": 0.182,
+      "cacheCreationUsdPerMillion": 0.182,
+      "provider": "Zhipu"
+    },
+    {
+      "pattern": "^glm-5[-.]2$",
+      "inputUsdPerMillion": 1.4,
+      "outputUsdPerMillion": 4.4,
+      "cacheReadUsdPerMillion": 0.26,
+      "cacheCreationUsdPerMillion": 0.26,
+      "provider": "Zhipu"
+    },
+    {
+      "pattern": "^zai-org/glm-5[-.]2$",
+      "inputUsdPerMillion": 1.4,
+      "outputUsdPerMillion": 4.4,
+      "cacheReadUsdPerMillion": 0.26,
+      "cacheCreationUsdPerMillion": 0.26,
+      "provider": "Zhipu"
     }
   ]
 }

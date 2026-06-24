@@ -160,6 +160,44 @@ const MODEL_TEST_CASES: ModelTestCase[] = [
     expectedOutputUsd: 0.4,
     expectedProvider: 'Zhipu',
   },
+  // ── GLM-5.1 ──
+  {
+    name: 'glm-5.1',
+    pattern: '^glm-5[-.]1$',
+    matchVariants: ['glm-5.1', 'glm-5-1', 'GLM-5.1', 'glm_5_1', 'GLM 5.1'],
+    noMatchVariants: ['glm-5', 'glm-5-turbo', 'glm-5.2'],
+    expectedInputUsd: 0.98,
+    expectedOutputUsd: 3.08,
+    expectedProvider: 'Zhipu',
+  },
+  {
+    name: 'zai-org/glm-5.1',
+    pattern: '^zai-org/glm-5[-.]1$',
+    matchVariants: ['zai-org/glm-5.1', 'zai-org/glm-5-1', 'ZAI-ORG/GLM-5.1'],
+    noMatchVariants: ['glm-5.1', 'zai-org/glm-5', 'zai-org/glm-5.2'],
+    expectedInputUsd: 0.98,
+    expectedOutputUsd: 3.08,
+    expectedProvider: 'Zhipu',
+  },
+  // ── GLM-5.2 ──
+  {
+    name: 'glm-5.2',
+    pattern: '^glm-5[-.]2$',
+    matchVariants: ['glm-5.2', 'glm-5-2', 'GLM-5.2', 'glm_5_2', 'GLM 5.2'],
+    noMatchVariants: ['glm-5', 'glm-5-turbo', 'glm-5.1'],
+    expectedInputUsd: 1.4,
+    expectedOutputUsd: 4.4,
+    expectedProvider: 'Zhipu',
+  },
+  {
+    name: 'zai-org/glm-5.2',
+    pattern: '^zai-org/glm-5[-.]2$',
+    matchVariants: ['zai-org/glm-5.2', 'zai-org/glm-5-2', 'ZAI-ORG/GLM-5.2'],
+    noMatchVariants: ['glm-5.2', 'zai-org/glm-5', 'zai-org/glm-5.1'],
+    expectedInputUsd: 1.4,
+    expectedOutputUsd: 4.4,
+    expectedProvider: 'Zhipu',
+  },
 ];
 
 // ============================================================
@@ -201,7 +239,7 @@ describe('normalizePricingModelName', () => {
 // ============================================================
 describe('BUILTIN_MODEL_PRICING', () => {
   it('should have the correct number of entries', () => {
-    expect(BUILTIN_MODEL_PRICING.length).toBe(12);
+    expect(BUILTIN_MODEL_PRICING.length).toBe(16);
   });
 
   it('should have unique patterns for all entries', () => {

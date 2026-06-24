@@ -25,6 +25,12 @@ export const BUILTIN_MODEL_PRICING: ModelPricingEntry[] = [
   // Zhipu / GLM-5 (cache hit ~25% of input per official GLM-5 pricing)
   { pattern: '^glm-5-turbo$',                           inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  cacheReadUsdPerMillion: 0.09,  cacheCreationUsdPerMillion: 0.09, provider: 'Zhipu' },
   { pattern: '^zai-org/glm-5$',                        inputUsdPerMillion: 0.35, outputUsdPerMillion: 0.40,  cacheReadUsdPerMillion: 0.09,  cacheCreationUsdPerMillion: 0.09, provider: 'Zhipu' },
+  // GLM-5.1 (203K context, cache ~18.6% of input)
+  { pattern: '^glm-5[-.]1$',                            inputUsdPerMillion: 0.98,  outputUsdPerMillion: 3.08,  cacheReadUsdPerMillion: 0.182, cacheCreationUsdPerMillion: 0.182, provider: 'Zhipu' },
+  { pattern: '^zai-org/glm-5[-.]1$',                   inputUsdPerMillion: 0.98,  outputUsdPerMillion: 3.08,  cacheReadUsdPerMillion: 0.182, cacheCreationUsdPerMillion: 0.182, provider: 'Zhipu' },
+  // GLM-5.2 (1M context, cache ~18.6% of input)
+  { pattern: '^glm-5[-.]2$',                            inputUsdPerMillion: 1.40,  outputUsdPerMillion: 4.40,  cacheReadUsdPerMillion: 0.26,  cacheCreationUsdPerMillion: 0.26,  provider: 'Zhipu' },
+  { pattern: '^zai-org/glm-5[-.]2$',                   inputUsdPerMillion: 1.40,  outputUsdPerMillion: 4.40,  cacheReadUsdPerMillion: 0.26,  cacheCreationUsdPerMillion: 0.26,  provider: 'Zhipu' },
 ];
 
 /**

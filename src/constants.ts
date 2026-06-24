@@ -30,6 +30,10 @@ export const KNOWN_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
   'moonshot': 128000,
   'kimi': 128000,
   // Zhipu AI (智谱GLM)
+  'glm-5.2': 1000000,
+  'glm-5-2': 1000000,
+  'glm-5.1': 203000,
+  'glm-5-1': 203000,
   'glm': 128000,
   'zhipu': 128000,
   // Claude (Anthropic)
