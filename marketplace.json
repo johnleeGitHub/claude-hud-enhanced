@@ -1,0 +1,26 @@
+{
+  "name": "claude-hud-enhanced",
+  "owner": {
+    "name": "johnleeGitHub",
+    "url": "https://github.com/johnleeGitHub"
+  },
+  "metadata": {
+    "description": "Enhanced HUD with 12 themes, effort, cache, and cost display for Claude Code.",
+    "version": "0.3.0"
+  },
+  "plugins": [
+    {
+      "name": "claude-hud-enhanced",
+      "source": ".",
+      "description": "Enhanced HUD with 12 themes, effort, cache, and cost display for Claude Code.",
+      "version": "0.3.0",
+      "author": {
+        "name": "johnleeGitHub",
+        "url": "https://github.com/johnleeGitHub"
+      },
+      "homepage": "https://github.com/johnleeGitHub/claude-hud-enhanced",
+      "repository": "https://github.com/johnleeGitHub/claude-hud-enhanced",
+      "keywords": ["hud", "theme", "effort", "cache", "cost"]
+    }
+  ]
+}
